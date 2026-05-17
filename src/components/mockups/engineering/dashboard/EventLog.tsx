@@ -1,11 +1,18 @@
 import React from "react";
+import { toast } from "sonner";
 
 interface EventLogProps {
   eventLogs: string[];
+  dataMode: string;
 }
 
-export function EventLog({ eventLogs }: EventLogProps) {
+export function EventLog({ eventLogs, dataMode }: EventLogProps) {
   const exportJson = () => {
+    if (dataMode === 'mock') {
+      toast.error("Export blocked: Simulation Mode does not generate valid engineering data.");
+      return;
+    }
+
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(eventLogs));
     const downloadAnchorNode = document.createElement('a');
     downloadAnchorNode.setAttribute("href",     dataStr);
@@ -21,7 +28,9 @@ export function EventLog({ eventLogs }: EventLogProps) {
         <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider">SCADA Event Log</div>
         <button 
           onClick={exportJson}
-          className="text-[10px] text-primary hover:underline"
+          className={`text-[10px] ${dataMode === 'mock' ? "text-muted-foreground cursor-not-allowed" : "text-primary hover:underline"}`}
+          disabled={dataMode === 'mock'}
+          title={dataMode === 'mock' ? "Unavailable in Simulation Mode" : "Export logs"}
         >
           Export JSON
         </button>

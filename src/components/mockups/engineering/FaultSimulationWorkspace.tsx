@@ -61,7 +61,7 @@ export function FaultSimulationWorkspace() {
                   }
                 }}
               />
-              <EventLog eventLogs={eventLogs} />
+              <EventLog eventLogs={eventLogs} dataMode={dataMode} />
             </div>
           </div>
 
