@@ -33,6 +33,16 @@ export function FaultSimulationWorkspace(props: FaultSimulationWorkspaceProps) {
   const faults = props.faults ?? storeFaults;
   const helpOpen = props.helpOpen ?? storeHelpOpen;
 
+  const [analysisResult, setAnalysisResult] = React.useState<{
+    voltageDropPercent: number;
+    lineLosses: number;
+    powerFactor: number;
+    isCritical: boolean;
+    calculatedVoltage: number;
+  } | null>(null);
+
+  const workerRef = React.useRef<Worker | null>(null);
+
   const handleThemeChange = props.onThemeChange ?? actions.setTheme;
   const handleHelpToggle = props.onHelpToggle ?? actions.toggleHelp;
   
@@ -95,6 +105,35 @@ export function FaultSimulationWorkspace(props: FaultSimulationWorkspaceProps) {
       stopMockServer();
     };
   }, [dataMode]);
+
+  // 4. Initialize Calculation Worker
+  React.useEffect(() => {
+    workerRef.current = new Worker(new URL("../../../lib/cadCalculator.worker.ts", import.meta.url), { type: "module" });
+    
+    workerRef.current.onmessage = (e) => {
+      const { type, data } = e.data;
+      if (type === "result") {
+        setAnalysisResult(data);
+        if (data.isCritical) {
+          actions.addLog(`Analysis Alert: Voltage drop exceeded critical limit! Calculated: ${data.calculatedVoltage.toFixed(1)}V`);
+        }
+      }
+    };
+
+    return () => {
+      workerRef.current?.terminate();
+    };
+  }, []);
+
+  // 5. Send data to worker on updates
+  React.useEffect(() => {
+    if (dataMode === 'live' && workerRef.current) {
+      workerRef.current.postMessage({
+        type: "calculate_load_flow",
+        data: liveData
+      });
+    }
+  }, [liveData, dataMode]);
 
   return (
     <div className={`${themeClass} h-screen w-screen overflow-hidden font-sans`}>
@@ -322,6 +361,31 @@ export function FaultSimulationWorkspace(props: FaultSimulationWorkspaceProps) {
                     <div className="aspect-video bg-background/50 rounded-md border border-border overflow-hidden">
                       <Isometric3DScene />
                     </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Engineering Analysis Panel */}
+              <div className="bg-card rounded-xl border border-border p-6 flex flex-col">
+                <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">Engineering Analysis</div>
+                <div className="space-y-2 text-xs font-mono">
+                  <div className="flex justify-between">
+                    <span>Voltage Drop:</span>
+                    <span className={analysisResult && analysisResult.voltageDropPercent > 5 ? "text-destructive font-bold animate-pulse" : "text-emerald-500 font-bold"}>
+                      {analysisResult ? `${analysisResult.voltageDropPercent.toFixed(2)}%` : "Calculating..."}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Line Losses:</span>
+                    <span className="text-primary font-bold">
+                      {analysisResult ? `${analysisResult.lineLosses.toFixed(2)} kW` : "Calculating..."}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Power Factor:</span>
+                    <span className="text-primary font-bold">
+                      {analysisResult ? analysisResult.powerFactor.toFixed(2) : "Calculating..."}
+                    </span>
                   </div>
                 </div>
               </div>
