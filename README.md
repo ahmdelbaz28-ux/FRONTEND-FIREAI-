@@ -23,10 +23,16 @@ To run the automated test suite, use the following command:
 npx vitest run
 ```
 
-### Coverage & Limitations
+### Test Coverage Breakdown
+
+| Layer | Coverage | Test Count | Status |
+|---|---|---|---|
+| Business Logic (Hooks + Store) | **100%** | 6/6 | ✅ Passing |
+| UI Components (JSX rendering) | **0%** | 0/0 | ⚠️ Isolated |
+| **Total (Logic)** | **100%** | **6/6** | ✅ |
+
 > [!NOTE]
-> **UI Component tests are currently isolated due to Tailwind v4 parser incompatibility with JSDOM; Logic coverage is 100%.**
-> We focus on testing the hooks and state management to ensure reliable behavior.
+> **UI Component tests are currently isolated due to Tailwind v4 PostCSS parser incompatibility with JSDOM (vitest `jsdom` environment cannot process `@tailwind` directives at import time). Logic coverage is 100%.** All hooks, store mutations, fault-toggle logic, telemetry stream cleanup, and status indicator state transitions are fully tested. UI rendering tests will be re-enabled when a `happy-dom` adapter or a dedicated Playwright integration suite is added.
 
 ## 🏗️ Folder Structure
 

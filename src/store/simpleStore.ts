@@ -19,6 +19,12 @@ let state = initialState;
 const listeners = new Set<(state: AppState) => void>();
 
 /**
+ * Returns a synchronous snapshot of the current state.
+ * Use in tests or non-reactive contexts only; prefer useStore() in components.
+ */
+export const getState = (): AppState => state;
+
+/**
  * Updates the application state and notifies subscribers.
  * @param nextState Partial state or function returning partial state.
  */
