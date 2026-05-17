@@ -11,6 +11,8 @@ export interface AppState {
     frequency: number;
   };
   eventLogs: string[];
+  dataMode: 'mock' | 'live';
+  connectionStatus: 'connected' | 'disconnected';
 }
 
 const initialState: AppState = {
@@ -23,6 +25,8 @@ const initialState: AppState = {
     frequency: 50.0,
   },
   eventLogs: [`[SYSTEM] System initialized in Dark mode.`],
+  dataMode: 'mock',
+  connectionStatus: 'connected',
 };
 
 let state = initialState;
@@ -60,4 +64,6 @@ export const actions = {
   toggleHelp: () => setState((s) => ({ helpOpen: !s.helpOpen })),
   updateLiveData: (data: Partial<AppState['liveData']>) => setState((s) => ({ liveData: { ...s.liveData, ...data } })),
   addLog: (log: string) => setState((s) => ({ eventLogs: [...s.eventLogs, `[${new Date().toLocaleTimeString()}] ${log}`] })),
+  setDataMode: (dataMode: 'mock' | 'live') => setState({ dataMode }),
+  setConnectionStatus: (connectionStatus: 'connected' | 'disconnected') => setState({ connectionStatus }),
 };

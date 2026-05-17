@@ -23,6 +23,8 @@ export function FaultSimulationWorkspace(props: FaultSimulationWorkspaceProps) {
   // New state from store
   const liveData = useStore((s) => s.liveData);
   const eventLogs = useStore((s) => s.eventLogs);
+  const dataMode = useStore((s) => s.dataMode);
+  const connectionStatus = useStore((s) => s.connectionStatus);
 
   const theme = props.theme ?? storeTheme;
   const faults = props.faults ?? storeFaults;
@@ -46,28 +48,35 @@ export function FaultSimulationWorkspace(props: FaultSimulationWorkspaceProps) {
   // Map theme to class
   const themeClass = theme === "dark" ? "dark" : theme === "blue" ? "theme-blue" : "";
 
-  // 1. Simulator: Live Data Fluctuations
+  // 1. Simulator: Live Data Fluctuations (Random Walk)
   React.useEffect(() => {
     const interval = setInterval(() => {
-      // Small random fluctuations around base values
-      actions.updateLiveData({
-        voltage: 220 + (Math.random() - 0.5) * 4,
-        current: 15 + (Math.random() - 0.5) * 1,
-        frequency: 50 + (Math.random() - 0.5) * 0.2,
-      });
+      if (dataMode === 'mock' && connectionStatus === 'connected') {
+        const deltaV = (Math.random() - 0.5) * 2; // max step 1V
+        const deltaI = (Math.random() - 0.5) * 0.2; // max step 0.1A
+        const deltaF = (Math.random() - 0.5) * 0.02; // max step 0.01Hz
+
+        actions.updateLiveData({
+          voltage: Math.min(240, Math.max(200, liveData.voltage + deltaV)),
+          current: Math.min(20, Math.max(10, liveData.current + deltaI)),
+          frequency: Math.min(50.5, Math.max(49.5, liveData.frequency + deltaF)),
+        });
+      }
     }, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [dataMode, connectionStatus, liveData]);
 
   // 2. Automated Scenario: Gen Overload triggers Battery Failure
   React.useEffect(() => {
-    if (isFaulty("gen-01") && !isFaulty("bat-01")) {
+    if (isFaulty("gen-01") && !isFaulty("bat-01") && connectionStatus === 'connected') {
       actions.addLog("CRITICAL: Generator overload detected. Cascading failure risk!");
       const timeout = setTimeout(() => {
-        // Double check if gen is still faulty before triggering cascade
-        if (actions.addFault) { // Just a reference check or we can just run it
-          actions.addFault("bat-01");
-          actions.addLog("CASCADE FAILURE: Battery bank failed due to sustained generator overload!");
+        actions.addFault("bat-01");
+        actions.addLog("CASCADE FAILURE: Battery bank failed due to sustained generator overload!");
+      }, 3000);
+      return () => clearTimeout(timeout);
+    }
+  }, [faults, connectionStatus]);
         }
       }, 3000);
       return () => clearTimeout(timeout);
@@ -114,6 +123,24 @@ export function FaultSimulationWorkspace(props: FaultSimulationWorkspaceProps) {
 
             <div className="h-5 w-px bg-border" />
 
+            {/* Data Mode Switcher */}
+            <div className="flex bg-muted p-1 rounded-lg text-xs">
+              <button 
+                onClick={() => actions.setDataMode("mock")}
+                className={`px-2 py-1 rounded-md ${dataMode === "mock" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"}`}
+              >
+                <span className="text-[10px] font-bold">MOCK</span>
+              </button>
+              <button 
+                onClick={() => actions.setDataMode("live")}
+                className={`px-2 py-1 rounded-md ${dataMode === "live" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"}`}
+              >
+                <span className="text-[10px] font-bold">LIVE</span>
+              </button>
+            </div>
+
+            <div className="h-5 w-px bg-border" />
+
             {/* Help Button */}
             <button 
               onClick={() => handleHelpToggle()}
@@ -124,8 +151,15 @@ export function FaultSimulationWorkspace(props: FaultSimulationWorkspaceProps) {
           </div>
         </div>
 
-        <div className="flex flex-1 overflow-hidden relative">
-          {/* Main Content - Workspace */}
+        <div className="flex flex-1 overflow-hidden relative flex-col">
+          {/* Connection Lost Bar */}
+          {connectionStatus === 'disconnected' && (
+            <div className="bg-destructive text-destructive-foreground text-xs font-bold py-2 px-6 flex items-center justify-between animate-pulse">
+              <span>CONNECTION LOST - SHOWING LAST KNOWN VALUES</span>
+              <button onClick={() => actions.setConnectionStatus('connected')} className="text-[10px] underline hover:text-white">Reconnect</button>
+            </div>
+          )}
+          
           <div className="flex-1 p-6 flex gap-6 overflow-hidden">
             
             {/* Simulation Canvas (Left) */}
@@ -246,6 +280,17 @@ export function FaultSimulationWorkspace(props: FaultSimulationWorkspaceProps) {
                       >
                         {isFaulty("bat-01") ? "Clear Battery Fault" : "Simulate Battery Failure"}
                       </button>
+                      <button 
+                        onClick={() => {
+                          actions.addLog("Starting stress test with 50 concurrent faults...");
+                          for (let i = 1; i <= 50; i++) {
+                            actions.addFault(`fault-${i}`);
+                          }
+                        }}
+                        className="w-full py-2 rounded-md text-xs font-medium bg-orange-500/10 text-orange-500 border border-orange-500/20 hover:bg-orange-500/20 transition-colors"
+                      >
+                        Run Stress Test (50 Faults)
+                      </button>
                     </div>
                   </div>
 
@@ -260,7 +305,23 @@ export function FaultSimulationWorkspace(props: FaultSimulationWorkspaceProps) {
 
               {/* SCADA Event Log */}
               <div className="bg-card rounded-xl border border-border p-6 flex-1 flex flex-col overflow-hidden">
-                <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">SCADA Event Log</div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider">SCADA Event Log</div>
+                  <button 
+                    onClick={() => {
+                      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(eventLogs));
+                      const downloadAnchorNode = document.createElement('a');
+                      downloadAnchorNode.setAttribute("href",     dataStr);
+                      downloadAnchorNode.setAttribute("download", "scada_logs.json");
+                      document.body.appendChild(downloadAnchorNode);
+                      downloadAnchorNode.click();
+                      downloadAnchorNode.remove();
+                    }}
+                    className="text-[10px] text-primary hover:underline"
+                  >
+                    Export JSON
+                  </button>
+                </div>
                 <div className="flex-1 bg-background/50 rounded-lg border border-border p-3 overflow-y-auto font-mono text-[10px] space-y-1">
                   {eventLogs.map((log, index) => (
                     <div key={index} className={`${log.includes("CRITICAL") || log.includes("CASCADE") ? "text-destructive" : "text-foreground"}`}>
