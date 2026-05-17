@@ -1,5 +1,10 @@
 # NexusCAD Pro UI - Mockup Sandbox (v1.0.0)
 
+> [!WARNING]
+> ## ⚠️ Known Limitations & Warnings
+> This system in its current state is a **simulation and visualization tool only**. The calculations performed are simplified approximations and are **NOT** verified for real-world engineering decisions.
+> Please refer to [LIMITATIONS.md](LIMITATIONS.md) for full details.
+
 A high-fidelity mockup and prototype for an advanced engineering CAD platform, featuring real-time fault simulation, multi-theme support, and an interactive isometric 3D visualization scene.
 
 ## 🌟 Key Features
@@ -30,18 +35,22 @@ src/
 
 ### Prerequisites
 - Node.js (v18+)
-- pnpm (Recommended for workspace setup)
+- npm (Standard for this project)
 
 ### Installation & Run
 1. Navigate to the project directory:
    ```bash
    cd c:/Users/EWS-01/Desktop/cloud/FRONTEND/NexusCAD-Pro-UI
    ```
-2. Start the development server:
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Start the development server:
    ```bash
    npm run dev
    ```
-3. Open the browser at the address shown in the terminal (usually `http://localhost:5173`).
+4. Open the browser at the address shown in the terminal (usually `http://localhost:5173`).
 
 ## 🔌 Integration Guide (Moving to Real Data)
 

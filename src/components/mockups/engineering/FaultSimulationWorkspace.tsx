@@ -61,7 +61,7 @@ export function FaultSimulationWorkspace() {
                   }
                 }}
               />
-              <EventLog eventLogs={eventLogs} dataMode={dataMode} />
+              <EventLog eventLogs={eventLogs} dataMode={dataMode} connectionStatus={connectionStatus} />
             </div>
           </div>
 

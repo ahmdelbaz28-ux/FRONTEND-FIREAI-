@@ -4,12 +4,18 @@ import { toast } from "sonner";
 interface EventLogProps {
   eventLogs: string[];
   dataMode: string;
+  connectionStatus: string;
 }
 
-export function EventLog({ eventLogs, dataMode }: EventLogProps) {
+export function EventLog({ eventLogs, dataMode, connectionStatus }: EventLogProps) {
   const exportJson = () => {
     if (dataMode === 'mock') {
       toast.error("Export blocked: Simulation Mode does not generate valid engineering data.");
+      return;
+    }
+
+    if (connectionStatus === 'disconnected') {
+      toast.error("Export blocked: Connection lost. Cannot verify data integrity.");
       return;
     }
 
@@ -22,15 +28,19 @@ export function EventLog({ eventLogs, dataMode }: EventLogProps) {
     downloadAnchorNode.remove();
   };
 
+  const isBlocked = dataMode === 'mock' || connectionStatus === 'disconnected';
+  const buttonColorClass = isBlocked ? "text-muted-foreground cursor-not-allowed" : "text-primary hover:underline";
+  const buttonClass = `text-[10px] ${buttonColorClass}`;
+
   return (
     <div className="bg-card rounded-xl border border-border p-6 flex-1 flex flex-col overflow-hidden">
       <div className="flex items-center justify-between mb-4">
         <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider">SCADA Event Log</div>
         <button 
           onClick={exportJson}
-          className={`text-[10px] ${dataMode === 'mock' ? "text-muted-foreground cursor-not-allowed" : "text-primary hover:underline"}`}
-          disabled={dataMode === 'mock'}
-          title={dataMode === 'mock' ? "Unavailable in Simulation Mode" : "Export logs"}
+          className={buttonClass}
+          disabled={isBlocked}
+          title={isBlocked ? "Unavailable in Simulation Mode or Disconnected" : "Export logs"}
         >
           Export JSON
         </button>
