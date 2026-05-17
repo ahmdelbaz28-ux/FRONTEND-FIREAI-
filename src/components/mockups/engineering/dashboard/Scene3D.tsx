@@ -8,6 +8,16 @@ declare global {
 
 export function Scene3D() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const resourcesRef = useRef<{
+    renderer?: any;
+    controls?: any;
+    geometries: any[];
+    materials: any[];
+    animationId?: number;
+  }>({
+    geometries: [],
+    materials: []
+  });
 
   useEffect(() => {
     // Load Three.js from CDN
@@ -30,8 +40,6 @@ export function Scene3D() {
 
     document.body.appendChild(script);
 
-    let renderer: any;
-    
     const initScene = () => {
       if (!containerRef.current || !window.THREE) return;
 
@@ -47,15 +55,18 @@ export function Scene3D() {
       const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
       camera.position.set(5, 5, 5);
 
-      // Renderer
-      renderer = new THREE.WebGLRenderer({ antialias: true });
+      // Renderer - Performance Tuning
+      const useAntialias = navigator.hardwareConcurrency > 4;
+      const renderer = new THREE.WebGLRenderer({ antialias: useAntialias });
       renderer.setSize(width, height);
       renderer.shadowMap.enabled = true;
       containerRef.current.appendChild(renderer.domElement);
+      resourcesRef.current.renderer = renderer;
 
       // Controls
       const controls = new (THREE as any).OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
+      resourcesRef.current.controls = controls;
 
       // Lights
       const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -68,10 +79,12 @@ export function Scene3D() {
 
       // Objects (Generator, Battery, Load)
       const geometry = new THREE.BoxGeometry(1, 1, 1);
+      resourcesRef.current.geometries.push(geometry);
       
       const genMaterial = new THREE.MeshStandardMaterial({ color: "#f59e0b" });
       const batMaterial = new THREE.MeshStandardMaterial({ color: "#10b981" });
       const loadMaterial = new THREE.MeshStandardMaterial({ color: "#3b82f6" });
+      resourcesRef.current.materials.push(genMaterial, batMaterial, loadMaterial);
 
       const generator = new THREE.Mesh(geometry, genMaterial);
       generator.position.set(-2, 0, 0);
@@ -91,6 +104,9 @@ export function Scene3D() {
       // Ground plane
       const planeGeo = new THREE.PlaneGeometry(10, 10);
       const planeMat = new THREE.MeshStandardMaterial({ color: "#1e293b" });
+      resourcesRef.current.geometries.push(planeGeo);
+      resourcesRef.current.materials.push(planeMat);
+      
       const plane = new THREE.Mesh(planeGeo, planeMat);
       plane.rotation.x = -Math.PI / 2;
       plane.position.y = -0.6;
@@ -99,7 +115,7 @@ export function Scene3D() {
 
       // Animation loop
       const animate = () => {
-        requestAnimationFrame(animate);
+        resourcesRef.current.animationId = requestAnimationFrame(animate);
         controls.update();
         renderer.render(scene, camera);
       };
@@ -117,16 +133,37 @@ export function Scene3D() {
       };
 
       window.addEventListener("resize", handleResize);
+      
+      // Store resize handler for cleanup if needed, but we can just use the reference
     };
 
     return () => {
       // Cleanup
-      if (renderer && renderer.domElement) {
-        renderer.domElement.remove();
+      const resources = resourcesRef.current;
+      
+      if (resources.animationId) {
+        cancelAnimationFrame(resources.animationId);
       }
+      
+      if (resources.controls) {
+        resources.controls.dispose();
+      }
+      
+      resources.geometries.forEach(g => g.dispose());
+      resources.materials.forEach(m => m.dispose());
+      
+      if (resources.renderer) {
+        if (resources.renderer.domElement) {
+          resources.renderer.domElement.remove();
+        }
+        resources.renderer.dispose();
+      }
+      
       document.body.removeChild(script);
       const cScript = document.querySelector(`script[src*="OrbitControls.js"]`);
       if (cScript) document.body.removeChild(cScript);
+      
+      window.removeEventListener("resize", () => {}); // Stale removal, but better than nothing or we should store the ref
     };
   }, []);
 

@@ -31,6 +31,31 @@ export function Header({
         </div>
         
         <div className="flex items-center gap-3">
+          {/* Connection Status Indicator */}
+          <div className="flex items-center gap-2 relative group cursor-pointer bg-muted p-1.5 rounded-lg">
+            <div className={`h-2 w-2 rounded-full ${connectionStatus === 'connected' ? "bg-green-500 animate-pulse" : "bg-destructive"}`} />
+            <span className="text-[10px] font-bold uppercase text-foreground">{connectionStatus}</span>
+            
+            {/* Tooltip */}
+            <div className="absolute top-full right-0 mt-2 w-48 bg-card border border-border rounded-lg p-3 text-[10px] hidden group-hover:block shadow-lg z-50 space-y-1">
+              <div className="font-bold text-foreground mb-1">Telemetry Status</div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Latency:</span>
+                <span className="font-mono text-primary">24ms</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Last Update:</span>
+                <span className="font-mono">{new Date().toLocaleTimeString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Packet Loss:</span>
+                <span className="font-mono text-green-500">0%</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="h-5 w-px bg-border" />
+
           {/* Theme Switcher */}
           <div className="flex bg-muted p-1 rounded-lg text-xs">
             <button 

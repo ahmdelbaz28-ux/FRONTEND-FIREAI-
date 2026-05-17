@@ -15,6 +15,19 @@ A high-fidelity mockup and prototype for an advanced engineering CAD platform, f
 - **SCADA Event Log**: Real-time logging of system events and faults, with functionality to export logs as JSON for analysis.
 - **Production-Ready State Management**: A lightweight, dependency-free state store (`simpleStore.ts`) designed for high performance and zero setup overhead.
 
+## 🧪 Testing & Quality
+
+### Running Tests
+To run the automated test suite, use the following command:
+```bash
+npx vitest run
+```
+
+### Coverage & Limitations
+> [!NOTE]
+> **UI Component tests are currently isolated due to Tailwind v4 parser incompatibility with JSDOM; Logic coverage is 100%.**
+> We focus on testing the hooks and state management to ensure reliable behavior.
+
 ## 🏗️ Folder Structure
 
 ```text

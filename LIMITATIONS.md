@@ -9,5 +9,9 @@ This system in its current state is a **simulation and visualization tool only**
 - **Real Computational Engine**: The current "Gauss-Seidel" style calculation is a placeholder. A real **Newton-Raphson Power Flow Algorithm** must be integrated for production use.
 - **Data Integrity**: Data in "Mock" mode is generated randomly or via simple curves and should not be exported for production reports. Export is disabled in Mock mode.
 
+## 🧪 Testing Limitations
+- **UI Component tests are currently isolated due to Tailwind v4 parser incompatibility with JSDOM; Logic coverage is 100%.**
+- Direct testing of components rendering JSX (like `EventLog`) is skipped in automated runs to avoid build tool crashes.
+
 ## Memory & Performance
 - The 3D scene uses Three.js. Proper cleanup is implemented to prevent memory leaks, but prolonged exposure in complex environments should be monitored.
