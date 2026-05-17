@@ -1,19 +1,5 @@
 import { useState, useEffect } from 'react';
-
-// Define the state shape
-export interface AppState {
-  theme: 'dark' | 'light' | 'blue';
-  faults: string[]; // IDs of components with faults
-  helpOpen: boolean;
-  liveData: {
-    voltage: number;
-    current: number;
-    frequency: number;
-  };
-  eventLogs: string[];
-  dataMode: 'mock' | 'live';
-  connectionStatus: 'connected' | 'disconnected';
-}
+import { AppState } from '@/types/store';
 
 const initialState: AppState = {
   theme: 'dark',
@@ -32,17 +18,31 @@ const initialState: AppState = {
 let state = initialState;
 const listeners = new Set<(state: AppState) => void>();
 
+/**
+ * Updates the application state and notifies subscribers.
+ * @param nextState Partial state or function returning partial state.
+ */
 export const setState = (nextState: Partial<AppState> | ((s: AppState) => Partial<AppState>)) => {
   const updates = typeof nextState === 'function' ? nextState(state) : nextState;
   state = { ...state, ...updates };
   listeners.forEach((listener) => listener(state));
 };
 
+/**
+ * Subscribes to state changes.
+ * @param listener Callback function receiving the new state.
+ * @returns Unsubscribe function.
+ */
 export const subscribe = (listener: (state: AppState) => void) => {
   listeners.add(listener);
   return () => listeners.delete(listener);
 };
 
+/**
+ * Custom hook to use a slice of the store.
+ * @param selector Function to select a slice of state.
+ * @returns The selected state slice.
+ */
 export const useStore = <T>(selector: (s: AppState) => T): T => {
   const [slice, setSlice] = useState(selector(state));
   
@@ -56,7 +56,9 @@ export const useStore = <T>(selector: (s: AppState) => T): T => {
   return slice;
 };
 
-// Helper actions
+/**
+ * Helper actions to mutate state.
+ */
 export const actions = {
   setTheme: (theme: 'dark' | 'light' | 'blue') => setState({ theme }),
   addFault: (faultId: string) => setState((s) => ({ faults: [...s.faults, faultId] })),

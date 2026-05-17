@@ -1,71 +1,55 @@
-# NexusCAD Pro — Complete UI Design System
-## 25 Professional Engineering Platform Screens
+# NexusCAD Pro UI - Mockup Sandbox (v1.0.0)
 
-### Stack
-- React 18 + TypeScript
-- Tailwind CSS
-- shadcn/ui components
-- lucide-react icons
-- Vite dev server
+A high-fidelity mockup and prototype for an advanced engineering CAD platform, featuring real-time fault simulation, multi-theme support, and an interactive isometric 3D visualization scene.
 
-### Setup & Run
-```bash
-npm install
-npm run dev
+## 🌟 Key Features
+
+- **Multi-Theme System**: Includes Dark, Light, and a specialized "Engineering Blue" (SCADA-like) theme with persistent preferences.
+- **Intelligent Simulation Engine**: Simulates live data fluctuations (Voltage, Current, Frequency) using a physical "Random Walk" algorithm and handles cascading fault scenarios.
+- **Isometric 3D Scene**: A pure HTML5 Canvas implementation of a 3D scene representing Generator, Battery, and Load. Supports dragging to rotate and dynamic color changes on fault detection without external heavy WebGL libraries.
+- **SCADA Event Log**: Real-time logging of system events and faults, with functionality to export logs as JSON for analysis.
+- **Production-Ready State Management**: A lightweight, dependency-free state store (`simpleStore.ts`) designed for high performance and zero setup overhead.
+
+## 🏗️ Folder Structure
+
+```text
+src/
+├── components/
+│   └── mockups/
+│       └── engineering/
+│           ├── FaultSimulationWorkspace.tsx  # Main Workspace UI
+│           ├── Isometric3DScene.tsx         # Canvas-based 3D scene
+│           └── FaultSimulationIntegrationDemo.tsx # Integration Example
+├── store/
+│   └── simpleStore.ts                        # Lightweight state store
+└── types/
+    └── store.ts                              # Shared TypeScript types
 ```
 
-### Screen Index
+## 🚀 Getting Started
 
-| # | Component File | Screen |
-|---|---------------|--------|
-| 1 | MainWorkspace.tsx | Main Engineering Workspace |
-| 2 | AICopilot.tsx | AI Engineering Copilot |
-| 3 | FileManager.tsx | File Management Center |
-| 4 | Settings.tsx | Settings Architecture |
-| 5 | ClashDetection.tsx | Clash Detection & BIM Coordination |
-| 6 | ComponentLibrary.tsx | Electrical Component Library |
-| 7 | ComplianceCenter.tsx | Code Compliance Center |
-| 8 | Collaboration.tsx | Real-Time Collaboration |
-| 9 | ReportGenerator.tsx | Engineering Reports Generator |
-| 10 | SLDEditor.tsx | Single Line Diagram Editor |
-| 11 | ProjectDashboard.tsx | Project Dashboard & Analytics |
-| 12 | PluginManager.tsx | Plugin Manager & Marketplace |
-| 13 | CableCalculator.tsx | Cable & Conductor Sizing Calculator |
-| 14 | LoadFlowAnalysis.tsx | Load Flow & Power System Analysis |
-| 15 | MCCDesigner.tsx | Motor Control Center Designer |
-| 16 | AuditTrail.tsx | Audit Trail & Revision History |
-| 17 | BMSDashboard.tsx | BMS — Building Management System |
-| 18 | FireAlarmDesigner.tsx | Fire Alarm & Life Safety Designer |
-| 19 | SecuritySystems.tsx | Security, CCTV & Access Control |
-| 20 | CablingNetwork.tsx | Structured Cabling, Network & AV |
-| 21 | WorkspaceArabic.tsx | Arabic RTL Interface |
-| 22 | MultilingualDemo.tsx | Multilingual Demo (EN/AR/FR) |
-| 23 | ProjectFileManager.tsx | Project File Manager |
-| 24 | ReportManager.tsx | Report Manager |
-| 25 | PythonSwagger.tsx | Python Terminal + Swagger API |
+### Prerequisites
+- Node.js (v18+)
+- pnpm (Recommended for workspace setup)
 
-### Preview URLs (when running locally)
-Each screen is available at:
-http://localhost:5173/preview/engineering/{ComponentName}
+### Installation & Run
+1. Navigate to the project directory:
+   ```bash
+   cd c:/Users/EWS-01/Desktop/cloud/FRONTEND/NexusCAD-Pro-UI
+   ```
+2. Start the development server:
+   ```bash
+   npm run dev
+   ```
+3. Open the browser at the address shown in the terminal (usually `http://localhost:5173`).
 
-### Design System
-- Background: slate-900 / slate-800 / slate-700
-- Text: slate-100 (primary), slate-400 (secondary)
-- Accent: blue-400 / blue-500
-- Error: red-400 | Warning: orange-400 | Success: green-400
-- Font: System sans-serif + monospace for terminals
-- Dark mode only
+## 🔌 Integration Guide (Moving to Real Data)
 
-### Languages Supported
-- English (LTR)
-- Arabic / العربية (RTL) — full mirror layout
-- French / Français (LTR)
+To replace the simulation with real data from a backend or sensors:
 
-### Engineering Standards Covered
-- IEC 60364, NEC 2023, BS 7671
-- NFPA 70, NFPA 72, NFPA 101
-- IEEE 1584 (Arc Flash), IEEE 519
-- ASHRAE 90.1, SMACNA
-- IBC 2021, ASCE 7-22, ACI 318
-- ISO 19650 (BIM), IFC 4.3
+1. **Disable Mock Mode**: Toggle the `dataMode` switcher to `LIVE` in the UI header.
+2. **Hook up WebSockets/APIs**: In `FaultSimulationWorkspace.tsx`, replace the `useEffect` random walk interval with a WebSocket listener.
+3. **Dispatch State**: Use `actions.updateLiveData({ ... })` and `actions.addLog("...")` to push real data into the store. The UI and 3D scene will react automatically.
 
+---
+*Maintained by the NexusCAD Engineering Team.*

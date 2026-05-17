@@ -37,6 +37,10 @@ export function Isometric3DScene() {
 
     let animationFrameId: number;
 
+    /**
+     * The main rendering loop.
+     * Clears the canvas, applies rotations, and draws the grid and objects.
+     */
     const render = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
@@ -110,7 +114,11 @@ export function Isometric3DScene() {
     };
   }, [angle, faults]);
 
-  // Helper to project 3D point to 2D screen
+  /**
+   * Projects a 3D coordinate to a 2D screen coordinate.
+   * Applies Y-axis rotation (user controlled) and fixed X-axis tilt (isometric feel).
+   * @returns [screenX, screenY]
+   */
   const project = (
     x: number, y: number, z: number, 
     cosA: number, sinA: number, 
