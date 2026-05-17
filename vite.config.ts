@@ -9,12 +9,14 @@ import { mockupPreviewPlugin } from "./mockupPreviewPlugin";
 const port = process.env.PORT ? Number(process.env.PORT) : 5173;
 const basePath = process.env.BASE_PATH || "/";
 
+const isTest = process.argv.some(arg => arg.includes("vitest"));
+
 export default defineConfig({
   base: basePath,
   plugins: [
     mockupPreviewPlugin(),
     react(),
-    tailwindcss(),
+    !isTest ? tailwindcss() : null,
     runtimeErrorOverlay(),
     ...(process.env.NODE_ENV !== "production" &&
     process.env.REPL_ID !== undefined
@@ -26,7 +28,7 @@ export default defineConfig({
           ),
         ]
       : []),
-  ],
+  ].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "src"),

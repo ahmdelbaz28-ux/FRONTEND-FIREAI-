@@ -1,4 +1,4 @@
-import { renderHook } from "@testing-library/react";
+import { renderHook, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useTelemetryStream } from "../useTelemetryStream";
 import { dataService } from "@/services/dataService";
@@ -26,5 +26,15 @@ describe("useTelemetryStream", () => {
 
     // Each unmount should call disconnect.
     expect(disconnectSpy).toHaveBeenCalledTimes(100);
+  });
+
+  it("should update connectionStatus on disconnect", () => {
+    const { result } = renderHook(() => useTelemetryStream());
+    
+    act(() => {
+      setState({ connectionStatus: 'disconnected' });
+    });
+
+    expect(result.current.connectionStatus).toBe('disconnected');
   });
 });
