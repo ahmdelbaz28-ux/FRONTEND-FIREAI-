@@ -209,7 +209,7 @@ export function CablingNetwork() {
                 <h3 className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1"><MonitorPlay className="w-3 h-3" /> Selected Room AV</h3>
                 <div className="bg-slate-900 border border-slate-700 p-2 rounded text-xs space-y-1">
                   <div className="text-slate-300 font-medium mb-1">Meeting Room 201</div>
-                  <PropRow label="Display" value="86\" Samsung QM86B" />
+                  <PropRow label="Display" value="86&quot; Samsung QM86B" />
                   <PropRow label="Processor" value="Crestron DM" />
                   <PropRow label="Mic" value="Shure MXA910" />
                 </div>
