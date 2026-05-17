@@ -1,5 +1,6 @@
 import React from "react";
 import { useStore, actions } from "@/store/simpleStore";
+import { Isometric3DScene } from "./Isometric3DScene";
 import { 
   Sun, Moon, Shield, AlertOctagon, HelpCircle, X, 
   FileText, Book, LifeBuoy, Zap, Battery, Power
@@ -296,8 +297,8 @@ export function FaultSimulationWorkspace(props: FaultSimulationWorkspaceProps) {
 
                   <div className="p-4 bg-muted/50 rounded-lg border border-border">
                     <div className="text-xs font-bold mb-2">3D Scene Setup</div>
-                    <div className="aspect-video bg-background/50 rounded-md border border-border flex items-center justify-center text-[10px] text-muted-foreground">
-                      [ 3D Render Placeholder ]
+                    <div className="aspect-video bg-background/50 rounded-md border border-border overflow-hidden">
+                      <Isometric3DScene />
                     </div>
                   </div>
                 </div>
