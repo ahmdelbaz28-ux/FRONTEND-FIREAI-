@@ -19,6 +19,10 @@ export function FaultSimulationWorkspace(props: FaultSimulationWorkspaceProps) {
   const storeTheme = useStore((s) => s.theme);
   const storeFaults = useStore((s) => s.faults);
   const storeHelpOpen = useStore((s) => s.helpOpen);
+  
+  // New state from store
+  const liveData = useStore((s) => s.liveData);
+  const eventLogs = useStore((s) => s.eventLogs);
 
   const theme = props.theme ?? storeTheme;
   const faults = props.faults ?? storeFaults;
@@ -30,8 +34,10 @@ export function FaultSimulationWorkspace(props: FaultSimulationWorkspaceProps) {
   const handleFaultToggle = props.onFaultToggle ?? ((id: string) => {
     if (faults.includes(id)) {
       actions.removeFault(id);
+      actions.addLog(`Fault cleared manually for element: ${id}`);
     } else {
       actions.addFault(id);
+      actions.addLog(`Fault injected manually on element: ${id}`);
     }
   });
 
@@ -39,6 +45,34 @@ export function FaultSimulationWorkspace(props: FaultSimulationWorkspaceProps) {
 
   // Map theme to class
   const themeClass = theme === "dark" ? "dark" : theme === "blue" ? "theme-blue" : "";
+
+  // 1. Simulator: Live Data Fluctuations
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      // Small random fluctuations around base values
+      actions.updateLiveData({
+        voltage: 220 + (Math.random() - 0.5) * 4,
+        current: 15 + (Math.random() - 0.5) * 1,
+        frequency: 50 + (Math.random() - 0.5) * 0.2,
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // 2. Automated Scenario: Gen Overload triggers Battery Failure
+  React.useEffect(() => {
+    if (isFaulty("gen-01") && !isFaulty("bat-01")) {
+      actions.addLog("CRITICAL: Generator overload detected. Cascading failure risk!");
+      const timeout = setTimeout(() => {
+        // Double check if gen is still faulty before triggering cascade
+        if (actions.addFault) { // Just a reference check or we can just run it
+          actions.addFault("bat-01");
+          actions.addLog("CASCADE FAILURE: Battery bank failed due to sustained generator overload!");
+        }
+      }, 3000);
+      return () => clearTimeout(timeout);
+    }
+  }, [faults]);
 
   return (
     <div className={`${themeClass} h-screen w-screen overflow-hidden font-sans`}>
@@ -96,7 +130,22 @@ export function FaultSimulationWorkspace(props: FaultSimulationWorkspaceProps) {
             
             {/* Simulation Canvas (Left) */}
             <div className="flex-1 bg-card rounded-xl border border-border p-6 flex flex-col relative overflow-hidden">
-              <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">Live Simulation Grid</div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Live Simulation Grid</div>
+                
+                {/* Digital Gauges */}
+                <div className="flex gap-4 text-xs font-mono">
+                  <div className="bg-background/80 px-2.py-1 rounded border border-border">
+                    <span className="text-muted-foreground">V:</span> <span className="text-primary font-bold">{liveData.voltage.toFixed(1)}</span>
+                  </div>
+                  <div className="bg-background/80 px-2.py-1 rounded border border-border">
+                    <span className="text-muted-foreground">I:</span> <span className="text-primary font-bold">{liveData.current.toFixed(2)}</span>
+                  </div>
+                  <div className="bg-background/80 px-2.py-1 rounded border border-border">
+                    <span className="text-muted-foreground">F:</span> <span className="text-primary font-bold">{liveData.frequency.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
               
               {/* Simulated Grid/Diagram */}
               <div className="flex-1 flex items-center justify-center gap-12 relative">
@@ -170,43 +219,60 @@ export function FaultSimulationWorkspace(props: FaultSimulationWorkspaceProps) {
               </div>
             </div>
 
-            {/* Controls (Right) */}
-            <div className="w-80 bg-card rounded-xl border border-border p-6 flex flex-col shrink-0">
-              <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">Simulation Control</div>
+            {/* Controls & Logs (Right) */}
+            <div className="w-80 flex flex-col gap-6 shrink-0">
               
-              <div className="space-y-4">
-                <div className="p-4 bg-muted/50 rounded-lg border border-border">
-                  <div className="text-xs font-bold mb-2">Inject Faults</div>
-                  <div className="space-y-2">
-                    <button 
-                      onClick={() => handleFaultToggle("gen-01")}
-                      className={`w-full py-2 rounded-md text-xs font-medium transition-colors ${
-                        isFaulty("gen-01") ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : "bg-muted border border-border hover:bg-accent"
-                      }`}
-                    >
-                      {isFaulty("gen-01") ? "Clear Gen Fault" : "Simulate Gen Overload"}
-                    </button>
-                    <button 
-                      onClick={() => handleFaultToggle("bat-01")}
-                      className={`w-full py-2 rounded-md text-xs font-medium transition-colors ${
-                        isFaulty("bat-01") ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : "bg-muted border border-border hover:bg-accent"
-                      }`}
-                    >
-                      {isFaulty("bat-01") ? "Clear Battery Fault" : "Simulate Battery Failure"}
-                    </button>
+              {/* Controls */}
+              <div className="bg-card rounded-xl border border-border p-6 flex flex-col">
+                <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">Simulation Control</div>
+                
+                <div className="space-y-4">
+                  <div className="p-4 bg-muted/50 rounded-lg border border-border">
+                    <div className="text-xs font-bold mb-2">Inject Faults</div>
+                    <div className="space-y-2">
+                      <button 
+                        onClick={() => handleFaultToggle("gen-01")}
+                        className={`w-full py-2 rounded-md text-xs font-medium transition-colors ${
+                          isFaulty("gen-01") ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : "bg-muted border border-border hover:bg-accent"
+                        }`}
+                      >
+                        {isFaulty("gen-01") ? "Clear Gen Fault" : "Simulate Gen Overload"}
+                      </button>
+                      <button 
+                        onClick={() => handleFaultToggle("bat-01")}
+                        className={`w-full py-2 rounded-md text-xs font-medium transition-colors ${
+                          isFaulty("bat-01") ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : "bg-muted border border-border hover:bg-accent"
+                        }`}
+                      >
+                        {isFaulty("bat-01") ? "Clear Battery Fault" : "Simulate Battery Failure"}
+                      </button>
+                    </div>
                   </div>
-                </div>
 
-                <div className="p-4 bg-muted/50 rounded-lg border border-border">
-                  <div className="text-xs font-bold mb-2">3D Scene Setup</div>
-                  <div className="text-xs text-muted-foreground mb-3">
-                    Scene layers prepared for real-time mesh highlighting on fault injection.
-                  </div>
-                  <div className="aspect-video bg-background/50 rounded-md border border-border flex items-center justify-center text-[10px] text-muted-foreground">
-                    [ 3D Render Placeholder ]
+                  <div className="p-4 bg-muted/50 rounded-lg border border-border">
+                    <div className="text-xs font-bold mb-2">3D Scene Setup</div>
+                    <div className="aspect-video bg-background/50 rounded-md border border-border flex items-center justify-center text-[10px] text-muted-foreground">
+                      [ 3D Render Placeholder ]
+                    </div>
                   </div>
                 </div>
               </div>
+
+              {/* SCADA Event Log */}
+              <div className="bg-card rounded-xl border border-border p-6 flex-1 flex flex-col overflow-hidden">
+                <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">SCADA Event Log</div>
+                <div className="flex-1 bg-background/50 rounded-lg border border-border p-3 overflow-y-auto font-mono text-[10px] space-y-1">
+                  {eventLogs.map((log, index) => (
+                    <div key={index} className={`${log.includes("CRITICAL") || log.includes("CASCADE") ? "text-destructive" : "text-foreground"}`}>
+                      {log}
+                    </div>
+                  ))}
+                  {eventLogs.length === 0 && (
+                    <div className="text-muted-foreground italic">No events logged.</div>
+                  )}
+                </div>
+              </div>
+
             </div>
           </div>
 
