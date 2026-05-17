@@ -1,6 +1,8 @@
 import React from "react";
 import { useStore, actions } from "@/store/simpleStore";
 import { Isometric3DScene } from "./Isometric3DScene";
+import { dataService } from "@/services/dataService";
+import { startMockServer, stopMockServer } from "@/services/mockServer";
 import { 
   Sun, Moon, Shield, AlertOctagon, HelpCircle, X, 
   FileText, Book, LifeBuoy, Zap, Battery, Power
@@ -78,11 +80,21 @@ export function FaultSimulationWorkspace(props: FaultSimulationWorkspaceProps) {
       return () => clearTimeout(timeout);
     }
   }, [faults, connectionStatus]);
-        }
-      }, 3000);
-      return () => clearTimeout(timeout);
+
+  // 3. Live Mode: Connect to DataService and MockServer
+  React.useEffect(() => {
+    if (dataMode === 'live') {
+      dataService.connect();
+      startMockServer();
+    } else {
+      dataService.disconnect();
+      stopMockServer();
     }
-  }, [faults]);
+    return () => {
+      dataService.disconnect();
+      stopMockServer();
+    };
+  }, [dataMode]);
 
   return (
     <div className={`${themeClass} h-screen w-screen overflow-hidden font-sans`}>
@@ -179,6 +191,16 @@ export function FaultSimulationWorkspace(props: FaultSimulationWorkspaceProps) {
                   <div className="bg-background/80 px-2.py-1 rounded border border-border">
                     <span className="text-muted-foreground">F:</span> <span className="text-primary font-bold">{liveData.frequency.toFixed(2)}</span>
                   </div>
+                  {dataMode === 'live' && (
+                    <>
+                      <div className="bg-background/80 px-2 py-1 rounded border border-border text-emerald-500">
+                        <span className="text-muted-foreground">Ping:</span> <span className="font-bold">45ms</span>
+                      </div>
+                      <div className="bg-background/80 px-2 py-1 rounded border border-border text-emerald-500">
+                        <span className="text-muted-foreground">Rate:</span> <span className="font-bold">1/s</span>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
               
