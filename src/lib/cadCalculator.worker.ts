@@ -21,7 +21,10 @@ self.onmessage = (e) => {
     const I_active = current * PF;
     const I_reactive = current * Math.sin(theta);
 
-    // Iterative Voltage Drop Calculation (Simplified Gauss-Seidel style)
+    // ===================================================================
+    // TODO: IMPLEMENT REAL NEWTON-RAPHSON POWER FLOW ALGORITHM.
+    // The following is a PLACEHOLDER simulation and NOT for engineering decisions.
+    // ===================================================================
     let calculatedVoltage = voltage;
     let voltageDrop = 0;
     let lineLosses = 0;

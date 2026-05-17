@@ -2,12 +2,11 @@ import { actions } from "@/store/simpleStore";
 
 export class DataService {
   private static instance: DataService;
-  private socket: WebSocket | null = null;
   private buffer: any[] = [];
   private maxBufferSize = 50;
   private reconnectInterval = 5000;
   private isConnected = false;
-  private url: string = "ws://localhost:8080"; // Mock URL
+  private worker: Worker | null = null;
 
   private constructor() {}
 
@@ -23,9 +22,6 @@ export class DataService {
 
     actions.addLog("Attempting to connect to Live Data Server...");
     
-    // In a real app, this would be: this.socket = new WebSocket(this.url);
-    // For this mock environment, we will simulate the WebSocket behavior.
-    
     setTimeout(() => {
       this.simulateConnection();
     }, 1000);
@@ -34,35 +30,46 @@ export class DataService {
   private simulateConnection() {
     this.isConnected = true;
     actions.setConnectionStatus("connected");
-    actions.addLog("Connected to Live Data Server (MOCK).");
+    actions.addLog("Connected to Live Data Server (MOCK WORKER).");
 
     if (this.buffer.length > 0) {
       actions.addLog(`[SYSTEM] Restored ${this.buffer.length} buffered readings. Data Gap detected.`);
       this.buffer = []; // Clear buffer after restoring
     }
 
-    // Start listening to the mock server events
-    window.addEventListener("mock-server-data", this.handleMessage as any);
+    // Initialize Worker
+    this.worker = new Worker(new URL("./mockWorker.ts", import.meta.url), { type: "module" });
+    this.worker.postMessage({ type: "start" });
+    
+    this.worker.onmessage = (e) => {
+      const { type, data } = e.data;
+      if (type === "data") {
+        this.handleData(data);
+      }
+    };
   }
 
   public disconnect() {
     this.isConnected = false;
     actions.setConnectionStatus("disconnected");
     actions.addLog("Disconnected from Live Data Server.");
-    window.removeEventListener("mock-server-data", this.handleMessage as any);
+    
+    if (this.worker) {
+      this.worker.postMessage({ type: "stop" });
+      this.worker.terminate();
+      this.worker = null;
+    }
   }
 
-  private handleMessage = (event: CustomEvent) => {
+  private handleData = (data: any) => {
     if (!this.isConnected) {
       // Buffer data if disconnected
       if (this.buffer.length < this.maxBufferSize) {
-        this.buffer.push(event.detail);
+        this.buffer.push(data);
       }
       return;
     }
 
-    const data = event.detail;
-    
     // Update store
     actions.updateLiveData({
       voltage: data.voltage,
@@ -85,6 +92,10 @@ export class DataService {
     actions.setConnectionStatus("disconnected");
     actions.addLog("Connection lost! Buffering incoming data...");
     
+    if (this.worker) {
+      this.worker.postMessage({ type: "stop" });
+    }
+
     // Auto reconnect after some time
     setTimeout(() => {
       this.connect();
