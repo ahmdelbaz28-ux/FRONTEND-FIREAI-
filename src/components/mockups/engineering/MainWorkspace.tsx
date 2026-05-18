@@ -9,13 +9,17 @@ import {
   FolderOpen, Cloud, DownloadCloud, PenTool, Layout, Box, Triangle,
   Settings, User, Bell, Cpu, Layers, Maximize, MinusSquare, Monitor,
   Crosshair, Focus, Mic, Send, Menu, ArrowRight, CornerDownRight, Plus, X, Lock, Eye, EyeOff,
-  ChevronUp, ChevronDown, Trash2, Download
+  ChevronUp, ChevronDown, Trash2, Download, Pin, Volume2
 } from "lucide-react";
 
 export function MainWorkspace() {
   const [activeTab, setActiveTab] = useState("Electrical");
   const [activeFile, setActiveFile] = useState("Tower-B-Electrical.dwg");
   const [isErrorLogExpanded, setIsErrorLogExpanded] = useState(true);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isErrorLogPinned, setIsErrorLogPinned] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [voiceCommand, setVoiceCommand] = useState("");
 
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-background text-foreground font-sans">
@@ -82,33 +86,48 @@ export function MainWorkspace() {
       </div>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Left Explorer */}
-        <div className="w-60 flex flex-col border-r bg-card/30">
-          <div className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground border-b flex justify-between items-center">
-            <span>Project Explorer</span>
-            <Search className="h-3 w-3" />
+        {/* Left Explorer (Project Manager Sidebar) */}
+        <div className={`${isSidebarCollapsed ? 'w-12' : 'w-60'} flex flex-col border-r bg-card/30 transition-all duration-300 overflow-hidden`}>
+          <div className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground border-b flex justify-between items-center bg-card/50">
+            {!isSidebarCollapsed && <span>Project Manager</span>}
+            <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}>
+              <Menu className="h-3 w-3" />
+            </Button>
           </div>
           <ScrollArea className="flex-1">
-            <div className="p-2 text-sm">
-              <TreeNode title="Tower-B Office Complex" defaultOpen>
-                <TreeNode title="Drawings" defaultOpen>
-                  <TreeNode title="Electrical" defaultOpen>
-                    <FileNode title="Tower-B-Electrical.dwg" type="dwg" active />
-                    <FileNode title="Fire-Alarm-Plan.dwg" type="dwg" />
-                    <FileNode title="Lighting-Layout.dwg" type="dwg" />
+            <div className={`p-2 text-sm ${isSidebarCollapsed ? 'hidden' : 'block'}`}>
+              <TreeNode title="Tower-B Project" defaultOpen>
+                <TreeNode title="Drawings & Models" defaultOpen>
+                  <FileNode title="Single Line Diagram (SLD)" type="dwg" active={activeFile === "SLD"} onClick={() => setActiveFile("SLD")} />
+                  <FileNode title="Cabling Network" type="dwg" active={activeFile === "Cabling"} onClick={() => setActiveFile("Cabling")} />
+                  <FileNode title="Connected Devices" type="dwg" active={activeFile === "Devices"} onClick={() => setActiveFile("Devices")} />
+                </TreeNode>
+                <TreeNode title="Project Elements" defaultOpen>
+                  <TreeNode title="SLD Elements">
+                    <FileNode title="Transformers" type="rvt" />
+                    <FileNode title="Switchgears" type="rvt" />
                   </TreeNode>
-                  <TreeNode title="Mechanical" />
-                  <TreeNode title="Structural" />
+                  <TreeNode title="Cabling Systems">
+                    <FileNode title="HV Cables" type="xlsx" />
+                    <FileNode title="LV Cables" type="xlsx" />
+                  </TreeNode>
                 </TreeNode>
-                <TreeNode title="BIM Models">
-                  <FileNode title="BIM-Model.rvt" type="rvt" />
+                <TreeNode title="Analysis & Reports" defaultOpen>
+                  <FileNode title="Report Manager" type="xlsx" active={activeFile === "Reports"} onClick={() => setActiveFile("Reports")} />
                 </TreeNode>
-                <TreeNode title="Reports">
-                  <FileNode title="Load-Calc.xlsx" type="xlsx" />
+                <TreeNode title="System Settings" defaultOpen>
+                  <FileNode title="Preferences" type="xlsx" />
+                  <FileNode title="Project Config" type="xlsx" />
                 </TreeNode>
-                <TreeNode title="Standards" />
               </TreeNode>
             </div>
+            {isSidebarCollapsed && (
+              <div className="flex flex-col items-center gap-4 py-4">
+                <FileText className="h-5 w-5 text-muted-foreground cursor-pointer" onClick={() => setIsSidebarCollapsed(false)} />
+                <Zap className="h-5 w-5 text-muted-foreground cursor-pointer" onClick={() => setIsSidebarCollapsed(false)} />
+                <Layout className="h-5 w-5 text-muted-foreground cursor-pointer" onClick={() => setIsSidebarCollapsed(false)} />
+              </div>
+            )}
           </ScrollArea>
           
           <div className="h-1/3 flex flex-col border-t bg-card/20">
@@ -166,29 +185,69 @@ export function MainWorkspace() {
 
             {/* Drawing Content */}
             <div className="absolute inset-0 pt-6 pl-6 overflow-hidden">
-              {/* Fake diagram elements */}
-              <div className="absolute top-32 left-40 w-64 h-80 border-2 border-slate-600 rounded-sm"></div>
-              <div className="absolute top-[180px] left-40 w-[600px] h-0.5 bg-primary"></div>
-              <div className="absolute top-[280px] left-40 w-[450px] h-0.5 bg-primary"></div>
-              <div className="absolute top-[380px] left-40 w-[550px] h-0.5 bg-primary"></div>
-              
-              <div className="absolute top-[170px] left-[640px] w-8 h-12 border-2 border-primary bg-[#0f1115] z-10"></div>
-              <div className="absolute top-[270px] left-[490px] w-8 h-12 border-2 border-primary bg-[#0f1115] z-10"></div>
-              <div className="absolute top-[370px] left-[590px] w-8 h-12 border-2 border-primary bg-[#0f1115] z-10"></div>
+              {activeFile === "Reports" ? (
+                <div className="p-6 text-foreground h-full overflow-auto">
+                  <h2 className="text-xl font-bold mb-4 text-primary">Report Manager (Comparison Mode)</h2>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 border rounded bg-card/50">
+                      <h3 className="font-semibold mb-2 text-primary">Result A (Current)</h3>
+                      <p className="text-sm text-muted-foreground">Load Flow Analysis - Rev 14</p>
+                      <div className="mt-2 text-emerald-400 font-mono text-sm">Status: Optimal</div>
+                      <div className="mt-4 space-y-2 text-xs font-mono">
+                        <div>Bus 1 Voltage: 1.02 pu</div>
+                        <div>Bus 2 Voltage: 0.98 pu</div>
+                        <div>Total Losses: 12.4 kW</div>
+                      </div>
+                    </div>
+                    <div className="p-4 border rounded bg-card/50">
+                      <h3 className="font-semibold mb-2 text-primary">Result B (Previous)</h3>
+                      <p className="text-sm text-muted-foreground">Load Flow Analysis - Rev 13</p>
+                      <div className="mt-2 text-orange-400 font-mono text-sm">Status: 2 Warnings</div>
+                      <div className="mt-4 space-y-2 text-xs font-mono">
+                        <div>Bus 1 Voltage: 1.01 pu</div>
+                        <div>Bus 2 Voltage: 0.94 pu (Low)</div>
+                        <div>Total Losses: 15.8 kW</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-4 p-4 border rounded border-red-500/50 bg-red-500/10">
+                    <h3 className="font-semibold text-red-400 mb-2 flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4" />
+                      Clash Detection / Conflicts
+                    </h3>
+                    <p className="text-sm text-foreground">
+                      Bus 2 Voltage in Result B violates the minimum limit of 0.95 pu. 
+                      Result A resolves this by upgrading the cable size on run EL-C-047.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* Fake diagram elements */}
+                  <div className="absolute top-32 left-40 w-64 h-80 border-2 border-slate-600 rounded-sm"></div>
+                  <div className="absolute top-[180px] left-40 w-[600px] h-0.5 bg-primary"></div>
+                  <div className="absolute top-[280px] left-40 w-[450px] h-0.5 bg-primary"></div>
+                  <div className="absolute top-[380px] left-40 w-[550px] h-0.5 bg-primary"></div>
+                  
+                  <div className="absolute top-[170px] left-[640px] w-8 h-12 border-2 border-primary bg-[#0f1115] z-10"></div>
+                  <div className="absolute top-[270px] left-[490px] w-8 h-12 border-2 border-primary bg-[#0f1115] z-10"></div>
+                  <div className="absolute top-[370px] left-[590px] w-8 h-12 border-2 border-primary bg-[#0f1115] z-10"></div>
 
-              {/* Selected Element */}
-              <div className="absolute top-[140px] left-32 w-16 h-100 border border-primary/50 bg-primary/10 backdrop-blur-sm shadow-[0_0_15px_rgba(0,168,255,0.2)] flex items-center justify-center group cursor-pointer z-10">
-                <div className="absolute -top-6 text-[10px] text-primary whitespace-nowrap font-mono">LP-3A [400A]</div>
-                <div className="w-2 h-2 rounded-full bg-primary absolute -top-1 -left-1"></div>
-                <div className="w-2 h-2 rounded-full bg-primary absolute -top-1 -right-1"></div>
-                <div className="w-2 h-2 rounded-full bg-primary absolute -bottom-1 -left-1"></div>
-                <div className="w-2 h-2 rounded-full bg-primary absolute -bottom-1 -right-1"></div>
-              </div>
+                  {/* Selected Element */}
+                  <div className="absolute top-[140px] left-32 w-16 h-100 border border-primary/50 bg-primary/10 backdrop-blur-sm shadow-[0_0_15px_rgba(0,168,255,0.2)] flex items-center justify-center group cursor-pointer z-10">
+                    <div className="absolute -top-6 text-[10px] text-primary whitespace-nowrap font-mono">LP-3A [400A]</div>
+                    <div className="w-2 h-2 rounded-full bg-primary absolute -top-1 -left-1"></div>
+                    <div className="w-2 h-2 rounded-full bg-primary absolute -top-1 -right-1"></div>
+                    <div className="w-2 h-2 rounded-full bg-primary absolute -bottom-1 -left-1"></div>
+                    <div className="w-2 h-2 rounded-full bg-primary absolute -bottom-1 -right-1"></div>
+                  </div>
 
-              {/* Dimensions */}
-              <div className="absolute top-28 left-40 w-64 border-t border-dashed border-emerald-500/50 flex justify-center items-center h-4">
-                <div className="px-2 bg-[#0f1115] text-[10px] text-emerald-400 font-mono">4200mm</div>
-              </div>
+                  {/* Dimensions */}
+                  <div className="absolute top-28 left-40 w-64 border-t border-dashed border-emerald-500/50 flex justify-center items-center h-4">
+                    <div className="px-2 bg-[#0f1115] text-[10px] text-emerald-400 font-mono">4200mm</div>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Floating Mini Toolbar */}
@@ -300,9 +359,27 @@ export function MainWorkspace() {
                 <Badge variant="outline" className="text-[10px] whitespace-nowrap cursor-pointer">Suggest Routing</Badge>
               </div>
               <div className="relative">
-                <Input className="pr-8 bg-background border-muted text-xs h-8" placeholder="Ask Copilot..." />
-                <Button size="icon" variant="ghost" className="absolute right-0 top-0 h-8 w-8 text-primary">
-                  <Mic className="h-4 w-4" />
+                <Input 
+                  className="pr-8 bg-background border-muted text-xs h-8" 
+                  placeholder={isListening ? "Listening..." : "Ask Copilot..."} 
+                  value={voiceCommand}
+                  onChange={(e) => setVoiceCommand(e.target.value)}
+                />
+                <Button 
+                  size="icon" 
+                  variant="ghost" 
+                  className={`absolute right-0 top-0 h-8 w-8 ${isListening ? 'text-red-500 animate-pulse' : 'text-primary'}`}
+                  onClick={() => {
+                    setIsListening(!isListening);
+                    if (!isListening) {
+                      setVoiceCommand("Processing voice command...");
+                      setTimeout(() => setVoiceCommand("Show me active clashes"), 1500);
+                    } else {
+                      setVoiceCommand("");
+                    }
+                  }}
+                >
+                  {isListening ? <Volume2 className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
                 </Button>
               </div>
             </div>
@@ -310,25 +387,29 @@ export function MainWorkspace() {
         </div>
       </div>
 
-      {/* Error Log Panel */}
-      <div className={`flex flex-col border-t bg-card/95 backdrop-blur-md transition-all duration-300 ease-in-out shrink-0 overflow-hidden ${isErrorLogExpanded ? 'h-48' : 'h-7'}`}>
+      {/* Global Error Log Bar */}
+      <div className={`flex flex-col border-t bg-card/95 backdrop-blur-md transition-all duration-300 ease-in-out shrink-0 overflow-hidden ${isErrorLogPinned ? 'h-48' : isErrorLogExpanded ? 'h-48' : 'h-7'}`}>
         {/* Header row (always visible) */}
-        <div className="h-7 flex items-center justify-between px-2 border-b cursor-pointer select-none shrink-0" onClick={() => setIsErrorLogExpanded(!isErrorLogExpanded)}>
+        <div className="h-7 flex items-center justify-between px-2 border-b cursor-pointer select-none shrink-0 bg-red-950/10" onClick={() => !isErrorLogPinned && setIsErrorLogExpanded(!isErrorLogExpanded)}>
           <div className="flex items-center gap-3">
             <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-foreground">Engineering Log</span>
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-foreground">Global Error Log</span>
             <div className="flex gap-1.5 items-center">
-              <Badge variant="destructive" className="h-4 text-[9px] px-1.5 py-0 border-red-500/50 bg-red-500">3 Errors</Badge>
+              <Badge variant="destructive" className="h-4 text-[9px] px-1.5 py-0 border-red-500/50 bg-red-500">3 New</Badge>
               <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 text-orange-400 border-orange-500/50 bg-orange-500/10">5 Warnings</Badge>
-              <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 text-blue-400 border-blue-500/50 bg-blue-500/10">12 Info</Badge>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground hover:text-foreground" onClick={(e) => { e.stopPropagation(); }}>
-              <Trash2 className="h-3 w-3" />
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className={`h-5 w-5 ${isErrorLogPinned ? 'text-primary' : 'text-muted-foreground'}`} 
+              onClick={(e) => { e.stopPropagation(); setIsErrorLogPinned(!isErrorLogPinned); }}
+            >
+              <Pin className="h-3 w-3" />
             </Button>
             <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground hover:text-foreground" onClick={(e) => { e.stopPropagation(); }}>
-              <Download className="h-3 w-3" />
+              <Trash2 className="h-3 w-3" />
             </Button>
             <Separator orientation="vertical" className="h-4" />
             <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground hover:text-foreground">
@@ -438,14 +519,17 @@ function TreeNode({ title, children, defaultOpen = false }: { title: string, chi
   );
 }
 
-function FileNode({ title, type, active = false }: { title: string, type: string, active?: boolean }) {
+function FileNode({ title, type, active = false, onClick }: { title: string, type: string, active?: boolean, onClick?: () => void }) {
   let color = "text-muted-foreground";
   if (type === "dwg") color = "text-blue-400";
   if (type === "rvt") color = "text-orange-400";
   if (type === "xlsx") color = "text-emerald-400";
   
   return (
-    <div className={`flex items-center gap-2 py-1 px-2 rounded cursor-pointer ${active ? "bg-primary/10 text-primary" : "hover:bg-muted/50 text-muted-foreground"}`}>
+    <div 
+      className={`flex items-center gap-2 py-1 px-2 rounded cursor-pointer ${active ? "bg-primary/10 text-primary" : "hover:bg-muted/50 text-muted-foreground"}`}
+      onClick={onClick}
+    >
       <FileText className={`h-3.5 w-3.5 ${color}`} />
       <span className={`text-xs truncate ${active ? "font-medium" : ""}`}>{title}</span>
     </div>

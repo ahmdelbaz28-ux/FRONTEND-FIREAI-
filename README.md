@@ -73,5 +73,22 @@ To replace the simulation with real data from a backend or sensors:
 2. **Hook up WebSockets/APIs**: In `FaultSimulationWorkspace.tsx`, replace the `useEffect` random walk interval with a WebSocket listener.
 3. **Dispatch State**: Use `actions.updateLiveData({ ... })` and `actions.addLog("...")` to push real data into the store. The UI and 3D scene will react automatically.
 
+## 🚀 Moving to Functional Engine (v2.0.0)
+
+We have transitioned from static mockups to a functional, interactive engineering tool. The system now includes:
+
+- **Interactive Canvas (`InteractiveCanvas.tsx`)**: Real drag-and-drop support for devices and smart connection lines.
+- **Dynamic Project Tree (`ProjectSidebar.tsx`)**: Reflects the current state of the canvas elements in real-time.
+- **Web Speech API Voice Control (`useVoiceControl.ts`)**: Control the CAD system using voice commands (e.g., "Add Generator").
+- **Real-Time Error Log (`FloatingErrorLog.tsx`)**: Monitors system state and displays errors (like voltage mismatches) dynamically.
+- **Intelligent Reporting (`ReportManager.tsx`)**: Runs conflict detection algorithms on the current design.
+
+### How to Use the New Features
+1. Open the main workspace.
+2. Drag devices from the left sidebar onto the canvas.
+3. Click a device and drag to another to connect them with a cable.
+4. Use the microphone button to issue voice commands (e.g., "Add Generator").
+5. Check the bottom error log for any design conflicts.
+
 ---
 *Maintained by the NexusCAD Engineering Team.*
