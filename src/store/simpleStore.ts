@@ -19,12 +19,6 @@ let state = initialState;
 const listeners = new Set<(state: AppState) => void>();
 
 /**
- * Returns a synchronous snapshot of the current state.
- * Use in tests or non-reactive contexts only; prefer useStore() in components.
- */
-export const getState = (): AppState => state;
-
-/**
  * Updates the application state and notifies subscribers.
  * Enforces immutability via Object.freeze.
  * @param nextState Partial state or function returning partial state.
@@ -77,10 +71,18 @@ export const useStore = <T>(selector: (s: AppState) => T): T => {
 export const actions = {
   setTheme: (theme: 'dark' | 'light' | 'blue') => setState({ theme }),
   addFault: (faultId: string) => setState((s) => ({ faults: [...s.faults, faultId] })),
-  removeFault: (faultId: string) => setState((s) => ({ faults: s.faults.filter((id) => id !== faultId) })),
+  removeFault: (faultId: string) => setState((id) => ({ faults: id.faults.filter((fid) => fid !== faultId) })),
   toggleHelp: () => setState((s) => ({ helpOpen: !s.helpOpen })),
   updateLiveData: (data: Partial<AppState['liveData']>) => setState((s) => ({ liveData: { ...s.liveData, ...data } })),
   addLog: (log: string) => setState((s) => ({ eventLogs: [...s.eventLogs, `[${new Date().toLocaleTimeString()}] ${log}`] })),
   setDataMode: (dataMode: 'mock' | 'live') => setState({ dataMode }),
   setConnectionStatus: (connectionStatus: 'connected' | 'disconnected') => setState({ connectionStatus }),
 };
+
+// Expose store to window for debugging in development
+if (typeof window !== 'undefined') {
+  (window as any).__NEXUS_STORE_DEBUG = {
+    getState: () => state,
+    setState: setState
+  };
+}
