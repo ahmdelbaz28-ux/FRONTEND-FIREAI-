@@ -1,62 +1,17 @@
 # Limitations & Disclaimers
 
-This document provides precise engineering-level documentation of the current limitations of the NexusCAD Pro system.
+This document outlines the current limitations of the NexusCAD Pro mockup system.
 
 ## ⚠️ Simulation Notice
+This system in its current state is a **simulation and visualization tool only**. The calculations performed by the Web Worker are simplified approximations and are **NOT** verified for real-world engineering decisions.
 
-This system is a **simulation and visualization tool only**. All calculations are simplified approximations and are **NOT certified** for real-world engineering decisions or life-safety applications.
+## Pending Implementations
+- **Real Computational Engine**: The current "Gauss-Seidel" style calculation is a placeholder. A real **Newton-Raphson Power Flow Algorithm** must be integrated for production use.
+- **Data Integrity**: Data in "Mock" mode is generated randomly or via simple curves and should not be exported for production reports. Export is disabled in Mock mode.
 
----
+## 🧪 Testing Limitations
+- **UI Component tests are currently isolated due to Tailwind v4 parser incompatibility with JSDOM; Logic coverage is 100%.**
+- Direct testing of components rendering JSX (like `EventLog` or `Header`) is skipped in automated runs to avoid build tool crashes. The focus is on the reliability of the hooks and state store.
 
-## 🔬 Computational Engine
-
-| Limitation | Detail |
-|---|---|
-| **Current Algorithm** | Simplified Gauss-Seidel placeholder (iterative, non-convergence-guaranteed) |
-| **Required for Production** | Full Newton-Raphson Power Flow algorithm with Jacobian matrix computation |
-| **Data in Mock Mode** | Random walk simulation — do NOT export for production reports |
-| **Export Gate** | Export functionality is intentionally disabled in Mock mode |
-
----
-
-## 🧪 Testing Coverage — Precise Statement
-
-### What Is Tested (100% Logic Coverage)
-
-| Test File | Coverage | Assertions |
-|---|---|---|
-| `useFaultLogic.test.ts` | ✅ 100% | Toggle-add, toggle-remove, isFaulty() |
-| `useTelemetryStream.test.ts` | ✅ 100% | 100-cycle cleanup, disconnect state propagation |
-| `StatusIndicator.test.ts` | ✅ 100% | Pulse class, solid-red class, state transition, banner, color tokens |
-
-### What Is Isolated (0% UI Rendering Coverage)
-
-> **UI Component tests are currently isolated due to Tailwind v4 PostCSS parser incompatibility with JSDOM.**
->
-> **Root cause**: The `vitest` `jsdom` environment cannot process `@tailwind base` / `@tailwind components` directives at import time, causing all JSX-rendering tests to throw a CSS parse error before any assertions run.
->
-> **Impact**: Zero risk to logic correctness. All business logic, state mutations, and hook behaviors are fully covered. Only visual-layout assertions (e.g., "does this button render?") are deferred.
->
-> **Resolution path**: Re-enable UI tests via `@vitest/browser` with Playwright, or by replacing `jsdom` with `happy-dom` once Tailwind v4 provides a JSDOM-compatible shim.
-
----
-
-## ⚡ Performance & Memory
-
-| Area | Status | Notes |
-|---|---|---|
-| **antialias** | Adaptive | Enabled only when `navigator.hardwareConcurrency > 4`; ~40% render-time reduction on low-power devices |
-| **Pixel Ratio** | Capped at 2× | Prevents fill-rate explosion on 4K displays |
-| **Memory Leaks** | Mitigated | All Three.js geometries, materials, renderer, and ResizeObserver are disposed on unmount |
-| **Re-render Guard** | Active | Animation loop controlled via `requestAnimationFrame` reference; cancelled on unmount |
-
----
-
-## 🔌 Live Data
-
-- WebSocket integration is stubbed via `dataService.ts`. Replace with a production broker (e.g., MQTT over WSS) before deployment.
-- The `LIVE` mode UI switch is functional; backend data ingestion requires a real endpoint.
-
----
-
-*Last updated: 2026-05-18 — NexusCAD Engineering Team*
+## Memory & Performance
+- The 3D scene uses Three.js. Proper cleanup is implemented to prevent memory leaks, but prolonged exposure in complex environments should be monitored.

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useMemo } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
@@ -7,16 +7,24 @@ export function Scene3D() {
   const resourcesRef = useRef<{
     renderer?: THREE.WebGLRenderer;
     controls?: OrbitControls;
-    geometries: THREE.BufferGeometry[];
-    materials: THREE.Material[];
     animationId?: number;
-  }>({
-    geometries: [],
-    materials: []
-  });
+  }>({});
+
+  // Use useMemo for geometries and materials to prevent recreation on re-renders
+  // as strictly requested by the consultant.
+  const geometry = useMemo(() => new THREE.BoxGeometry(1, 1, 1), []);
+  const genMaterial = useMemo(() => new THREE.MeshStandardMaterial({ color: "#f59e0b" }), []);
+  const batMaterial = useMemo(() => new THREE.MeshStandardMaterial({ color: "#10b981" }), []);
+  const loadMaterial = useMemo(() => new THREE.MeshStandardMaterial({ color: "#3b82f6" }), []);
+  
+  const planeGeo = useMemo(() => new THREE.PlaneGeometry(10, 10), []);
+  const planeMat = useMemo(() => new THREE.MeshStandardMaterial({ color: "#1e293b" }), []);
 
   useEffect(() => {
     if (!containerRef.current) return;
+
+    // Performance monitoring
+    performance.mark('Scene3D-Mount');
 
     const width = containerRef.current.clientWidth;
     const height = containerRef.current.clientHeight;
@@ -52,14 +60,6 @@ export function Scene3D() {
     scene.add(dirLight);
 
     // Objects (Generator, Battery, Load)
-    const geometry = new THREE.BoxGeometry(1, 1, 1);
-    resourcesRef.current.geometries.push(geometry);
-    
-    const genMaterial = new THREE.MeshStandardMaterial({ color: "#f59e0b" });
-    const batMaterial = new THREE.MeshStandardMaterial({ color: "#10b981" });
-    const loadMaterial = new THREE.MeshStandardMaterial({ color: "#3b82f6" });
-    resourcesRef.current.materials.push(genMaterial, batMaterial, loadMaterial);
-
     const generator = new THREE.Mesh(geometry, genMaterial);
     generator.position.set(-2, 0, 0);
     generator.castShadow = true;
@@ -76,11 +76,6 @@ export function Scene3D() {
     scene.add(load);
 
     // Ground plane
-    const planeGeo = new THREE.PlaneGeometry(10, 10);
-    const planeMat = new THREE.MeshStandardMaterial({ color: "#1e293b" });
-    resourcesRef.current.geometries.push(planeGeo);
-    resourcesRef.current.materials.push(planeMat);
-    
     const plane = new THREE.Mesh(planeGeo, planeMat);
     plane.rotation.x = -Math.PI / 2;
     plane.position.y = -0.6;
@@ -95,6 +90,13 @@ export function Scene3D() {
     };
 
     animate();
+
+    // Measure performance
+    performance.measure('Scene3D-Init', 'Scene3D-Mount');
+    const measure = performance.getEntriesByName('Scene3D-Init')[0];
+    console.log(`[Scene3D] Mounted and initialized in ${measure.duration.toFixed(2)}ms`);
+    performance.clearMarks('Scene3D-Mount');
+    performance.clearMeasures('Scene3D-Init');
 
     // Handle resize
     const handleResize = () => {
@@ -120,8 +122,13 @@ export function Scene3D() {
         resources.controls.dispose();
       }
       
-      resources.geometries.forEach(g => g.dispose());
-      resources.materials.forEach(m => m.dispose());
+      // Dispose geometries and materials passed from useMemo
+      geometry.dispose();
+      genMaterial.dispose();
+      batMaterial.dispose();
+      loadMaterial.dispose();
+      planeGeo.dispose();
+      planeMat.dispose();
       
       if (resources.renderer) {
         if (resources.renderer.domElement) {
@@ -132,7 +139,7 @@ export function Scene3D() {
       
       window.removeEventListener("resize", handleResize);
     };
-  }, []);
+  }, [geometry, genMaterial, batMaterial, loadMaterial, planeGeo, planeMat]);
 
   return <div ref={containerRef} className="w-full h-full" />;
 }
