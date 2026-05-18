@@ -1,19 +1,19 @@
 import { useState, useEffect } from 'react';
 import { AppState } from '@/types/store';
 
-const initialState: AppState = {
+const initialState: AppState = Object.freeze({
   theme: 'dark',
   faults: [],
   helpOpen: false,
-  liveData: {
+  liveData: Object.freeze({
     voltage: 220.5,
     current: 15.2,
     frequency: 50.0,
-  },
+  }),
   eventLogs: [`[SYSTEM] System initialized in Dark mode.`],
   dataMode: 'mock',
   connectionStatus: 'connected',
-};
+});
 
 let state = initialState;
 const listeners = new Set<(state: AppState) => void>();
@@ -26,11 +26,20 @@ export const getState = (): AppState => state;
 
 /**
  * Updates the application state and notifies subscribers.
+ * Enforces immutability via Object.freeze.
  * @param nextState Partial state or function returning partial state.
  */
 export const setState = (nextState: Partial<AppState> | ((s: AppState) => Partial<AppState>)) => {
   const updates = typeof nextState === 'function' ? nextState(state) : nextState;
-  state = { ...state, ...updates };
+  
+  const newState = { ...state, ...updates };
+  
+  // Shallow freeze the top level and nested objects we know about
+  if (newState.liveData) {
+    newState.liveData = Object.freeze({ ...newState.liveData });
+  }
+  
+  state = Object.freeze(newState);
   listeners.forEach((listener) => listener(state));
 };
 
