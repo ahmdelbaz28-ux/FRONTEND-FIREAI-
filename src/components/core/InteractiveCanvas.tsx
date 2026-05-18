@@ -54,10 +54,7 @@ export function InteractiveCanvas() {
         const fromEl = canvasElements.find(el => el.id === drawingFrom);
         const toEl = canvasElements.find(el => el.id === id);
         if (fromEl && toEl && fromEl.voltage !== toEl.voltage) {
-          actions.pushError({
-            message: `Voltage mismatch between ${fromEl.type} (${fromEl.voltage}V) and ${toEl.type} (${toEl.voltage}V)!`,
-            elementId: newCable.id
-          });
+          actions.pushError(`Voltage mismatch between ${fromEl.type} (${fromEl.voltage}V) and ${toEl.type} (${toEl.voltage}V)!`);
         }
       }
     }

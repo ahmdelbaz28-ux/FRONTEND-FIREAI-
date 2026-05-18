@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { 
   Users, UserPlus, Link2, Phone, Video, Mic, MicOff, MessageSquare,
   CheckCircle2, AlertCircle, Play, MoreHorizontal, MousePointer2,
-  FileEdit, Eye, MonitorPlay, Send, Share2, UploadCloud
+  FileEdit, Eye, MonitorPlay, Send, Share2, UploadCloud, History, Settings
 } from "lucide-react";
 
 export function Collaboration() {

@@ -257,7 +257,12 @@ export function MCCDesigner() {
   );
 }
 
-function PaletteItem({ label, size, bg = "bg-slate-800", border = "border border-slate-700" }) {
+function PaletteItem({ label, size, bg = "bg-slate-800", border = "border border-slate-700" }: {
+  label: string;
+  size: string;
+  bg?: string;
+  border?: string;
+}) {
   return (
     <div className={`p-2 rounded cursor-grab hover:ring-1 ring-blue-500 transition-all ${bg} ${border}`}>
       <div className="text-[10px] font-semibold text-slate-200">{label}</div>
@@ -266,7 +271,14 @@ function PaletteItem({ label, size, bg = "bg-slate-800", border = "border border
   );
 }
 
-function Bucket({ title, sub, status, units, color = "bg-slate-900 border-slate-700", text = "text-white" }) {
+function Bucket({ title, sub, status, units, color = "bg-slate-900 border-slate-700", text = "text-white" }: {
+  title: string;
+  sub?: string;
+  status?: string;
+  units: number;
+  color?: string;
+  text?: string;
+}) {
   const height = Math.max(units * 30, 40); // Rough pixel mapping
   
   let dot = null;
@@ -287,7 +299,7 @@ function Bucket({ title, sub, status, units, color = "bg-slate-900 border-slate-
   );
 }
 
-function PropRow({ label, value, link = false }) {
+function PropRow({ label, value, link = false }: { label: string; value: string; link?: boolean }) {
   return (
     <div className="flex justify-between items-center text-xs">
       <span className="text-muted-foreground">{label}</span>

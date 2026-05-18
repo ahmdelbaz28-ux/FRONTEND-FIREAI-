@@ -20,32 +20,115 @@ export interface Connection {
   isOverloaded: boolean;
 }
 
+export interface LogEntry {
+  id: string;
+  message: string;
+  type: 'info' | 'warning' | 'error' | 'success';
+  timestamp: number;
+}
+
+// --- Additional Interfaces ---
 export interface AppError {
   id: string;
   message: string;
   severity: 'info' | 'warning' | 'critical';
   timestamp: number;
   relatedElementId?: string;
+  elementId?: string;
+}
+  export interface CanvasElement {
+  id: string;
+  type: string;
+  x: number;
+  y: number;
+  properties?: Record<string, unknown>;
+  from?: string;
+  to?: string;
+  voltage?: number;
+  load?: number;
 }
 
 export interface AppState {
   theme: 'dark' | 'light' | 'blue';
   devices: Device[];
   connections: Connection[];
+  errorLog: AppError[];
   errors: AppError[];
   selectedElementId: string | null;
-  activePaletteType: DeviceType | null; // Added to support Palette
+  selectedElement: string | null;
+  activePaletteType: DeviceType | null;
   isSidebarOpen: boolean;
+  canvasElements: CanvasElement[];
+  helpOpen: boolean;
+  eventLogs: LogEntry[];
+  dataMode: 'live' | 'simulation' | 'demo';
+  liveData: Record<string, unknown>;
+  connectionStatus: 'connected' | 'disconnected' | 'connecting';
+  voiceActive: boolean;
+  faults: Array<{ id: string; type: string; timestamp: number }>;
+  setDataMode: (mode: 'live' | 'simulation' | 'demo') => void;
+  toggleHelp: () => void;
+  addLog: (log: Omit<LogEntry, 'id' | 'timestamp'>) => void;
+  addElement: (element: Omit<CanvasElement, 'id'>) => void;
+  removeElement: (id: string) => void;
+  pushError: (message: string) => void;
+  setSelectedElement: (id: string | null) => void;
+  removeFault: (id: string) => void;
+  addFault: (fault: { type: string }) => void;
+  updateLiveData: (data: Record<string, unknown>) => void;
+  setConnectionStatus: (status: 'connected' | 'disconnected' | 'connecting') => void;
+  setVoiceActive: (active: boolean) => void;
 }
 
 const initialState: AppState = {
   theme: 'dark',
   devices: [],
   connections: [],
+  errorLog: [],
   errors: [],
   selectedElementId: null,
+  selectedElement: null,
   activePaletteType: null,
   isSidebarOpen: true,
+  canvasElements: [],
+  helpOpen: false,
+  eventLogs: [],
+  dataMode: 'demo',
+  liveData: {},
+  connectionStatus: 'disconnected',
+  voiceActive: false,
+  faults: [],
+  setDataMode: (mode: 'live' | 'simulation' | 'demo') => setState({ dataMode: mode }),
+  toggleHelp: () => setState((s) => ({ helpOpen: !s.helpOpen })),
+  addLog: (log: string | Omit<LogEntry, 'id' | 'timestamp'>) => {
+    const newLog: LogEntry = typeof log === 'string'
+      ? { id: `LOG-${Date.now()}`, message: log, type: 'info', timestamp: Date.now() }
+      : { ...log, id: `LOG-${Date.now()}`, timestamp: Date.now() };
+    setState((s) => ({ eventLogs: [newLog, ...s.eventLogs] }));
+  },
+  addElement: (element: Omit<CanvasElement, 'id'> | CanvasElement) => {
+    const newElement: CanvasElement = 'id' in element ? element : { ...element, id: `EL-${Date.now()}` };
+    setState((s) => ({ canvasElements: [...s.canvasElements, newElement] }));
+  },
+  removeElement: (id: string) => setState((s) => ({ canvasElements: s.canvasElements.filter(el => el.id !== id) })),
+  pushError: (message: string | { message: string }) => {
+    const msg = typeof message === 'string' ? message : message.message;
+    const error: AppError = { id: `ERR-${Date.now()}`, message: msg, severity: 'critical', timestamp: Date.now() };
+    setState((s) => ({ errorLog: [error, ...s.errorLog], errors: [error, ...s.errors] }));
+  },
+  setSelectedElement: (id: string | null) => setState({ selectedElementId: id, selectedElement: id }),
+  removeFault: (id: string | { id: string }) => {
+    const faultId = typeof id === 'string' ? id : id.id;
+    setState((s) => ({ faults: s.faults.filter(f => f.id !== faultId) }));
+  },
+  addFault: (fault: string | { type: string }) => {
+    const faultType = typeof fault === 'string' ? fault : fault.type;
+    const newFault = { id: `FAULT-${Date.now()}`, type: faultType, timestamp: Date.now() };
+    setState((s) => ({ faults: [...s.faults, newFault] }));
+  },
+  updateLiveData: (data: Record<string, unknown>) => setState((s) => ({ liveData: { ...s.liveData, ...data } })),
+  setConnectionStatus: (status: 'connected' | 'disconnected' | 'connecting') => setState({ connectionStatus: status }),
+  setVoiceActive: (active: boolean) => setState({ voiceActive: active }),
 };
 
 // --- State Management Logic ---
@@ -74,7 +157,7 @@ export const setState = (nextState: Partial<AppState> | ((s: AppState) => Partia
 
 export const subscribe = (listener: (s: AppState) => void) => {
   listeners.add(listener);
-  return () => listeners.delete(listener);
+  return () => { listeners.delete(listener); };
 };
 
 export const useStore = <T>(selector: (s: AppState) => T): T => {
@@ -91,7 +174,10 @@ export const actions = {
   setTheme: (theme: 'dark' | 'light' | 'blue') => setState({ theme }),
   toggleSidebar: () => setState((s) => ({ isSidebarOpen: !s.isSidebarOpen })),
   selectElement: (id: string | null) => setState({ selectedElementId: id }),
-  setActivePaletteType: (type: DeviceType | null) => setState({ activePaletteType: type }), // Added
+  setSelectedElement: (id: string | null) => setState({ selectedElementId: id, selectedElement: id }),
+  setActivePaletteType: (type: DeviceType | null) => setState({ activePaletteType: type }),
+  setDataMode: (mode: 'live' | 'simulation' | 'demo') => setState({ dataMode: mode }),
+  toggleHelp: () => setState((s) => ({ helpOpen: !s.helpOpen })),
   
   addDevice: (device: Omit<Device, 'id'>) => {
     const newDevice: Device = { ...device, id: `DEV-${Date.now()}` };
@@ -114,7 +200,6 @@ export const actions = {
 
   addConnection: (fromId: string, toId: string) => {
     setState((s) => {
-      // Check duplicates
       if (s.connections.some(c => (c.fromId === fromId && c.toId === toId) || (c.fromId === toId && c.toId === fromId))) {
         return s;
       }
@@ -124,9 +209,8 @@ export const actions = {
       
       if (!fromDev || !toDev) return s;
 
-      // Simple Load Flow Logic: Average load for demo, real logic later
       const combinedLoad = (fromDev.load + toDev.load) / 2;
-      const isOverloaded = combinedLoad > 200; // Threshold
+      const isOverloaded = combinedLoad > 200;
 
       const newConn: Connection = {
         id: `CONN-${Date.now()}`,
@@ -136,7 +220,6 @@ export const actions = {
         isOverloaded
       };
 
-      // Trigger Error if overloaded
       if (isOverloaded) {
         actions.addError({
           message: `Overload Detected on connection ${newConn.id} (${combinedLoad.toFixed(1)}A)`,
@@ -155,13 +238,50 @@ export const actions = {
       id: `ERR-${Date.now()}`,
       timestamp: Date.now()
     };
-    setState((s) => ({ errors: [newError, ...s.errors] }));
+    setState((s) => ({ errors: [newError, ...s.errors], errorLog: [newError, ...s.errorLog] }));
   },
 
-  clearErrors: () => setState({ errors: [] }),
+  pushError: (message: string | { message: string }) => {
+    const msg = typeof message === 'string' ? message : message.message;
+    const error: AppError = { id: `ERR-${Date.now()}`, message: msg, severity: 'critical', timestamp: Date.now() };
+    setState((s) => ({ errorLog: [error, ...s.errorLog], errors: [error, ...s.errors] }));
+  },
+
+  addElement: (element: Omit<CanvasElement, 'id'> | CanvasElement) => {
+    const newElement: CanvasElement = 'id' in element ? element : { ...element, id: `EL-${Date.now()}` };
+    setState((s) => ({ canvasElements: [...s.canvasElements, newElement] }));
+  },
+
+  removeElement: (id: string) => setState((s) => ({ canvasElements: s.canvasElements.filter(el => el.id !== id) })),
+  
+  addLog: (log: string | Omit<LogEntry, 'id' | 'timestamp'>) => {
+    const newLog: LogEntry = typeof log === 'string'
+      ? { id: `LOG-${Date.now()}`, message: log, type: 'info', timestamp: Date.now() }
+      : { ...log, id: `LOG-${Date.now()}`, timestamp: Date.now() };
+    setState((s) => ({ eventLogs: [newLog, ...s.eventLogs] }));
+  },
+
+  clearErrors: () => setState({ errors: [], errorLog: [] }),
   
   resetProject: () => {
-    setState({ devices: [], connections: [], errors: [], selectedElementId: null, activePaletteType: null });
+    setState({ devices: [], connections: [], errors: [], errorLog: [], selectedElementId: null, activePaletteType: null });
     localStorage.removeItem('nexus_project_state');
-  }
+  },
+
+  addFault: (fault: string | { type: string }) => {
+    const faultType = typeof fault === 'string' ? fault : fault.type;
+    const newFault = { id: `FAULT-${Date.now()}`, type: faultType, timestamp: Date.now() };
+    setState((s) => ({ faults: [...s.faults, newFault] }));
+  },
+
+  removeFault: (id: string | { id: string }) => {
+    const faultId = typeof id === 'string' ? id : id.id;
+    setState((s) => ({ faults: s.faults.filter(f => f.id !== faultId) }));
+  },
+
+  updateLiveData: (data: Record<string, unknown>) => setState((s) => ({ liveData: { ...s.liveData, ...data } })),
+
+  setConnectionStatus: (status: 'connected' | 'disconnected' | 'connecting') => setState({ connectionStatus: status }),
+
+  setVoiceActive: (active: boolean) => setState({ voiceActive: active }),
 };

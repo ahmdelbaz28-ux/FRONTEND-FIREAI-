@@ -1,12 +1,15 @@
 import { useEffect, useRef, useMemo } from "react";
 import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+// @ts-ignore - OrbitControls path varies by Three.js version
+const OrbitControlsClass = require("three/examples/jsm/controls/OrbitControls").OrbitControls;
+type OrbitControlsType = InstanceType<typeof OrbitControlsClass>;
 
 export function Scene3D() {
   const containerRef = useRef<HTMLDivElement>(null);
   const resourcesRef = useRef<{
     renderer?: THREE.WebGLRenderer;
-    controls?: OrbitControls;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    controls?: any;
     animationId?: number;
   }>({});
 
@@ -46,7 +49,7 @@ export function Scene3D() {
     resourcesRef.current.renderer = renderer;
 
     // Controls
-    const controls = new OrbitControls(camera, renderer.domElement);
+    const controls = new OrbitControlsClass(camera, renderer.domElement);
     controls.enableDamping = true;
     resourcesRef.current.controls = controls;
 

@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { 
   FileText, Settings, DownloadCloud, ChevronRight, ChevronDown, Check, GripVertical, Image as ImageIcon,
-  Folder, Calendar, FileBox, Wand2, Search
+  Folder, Calendar, FileBox, Wand2, Search, X
 } from "lucide-react";
 
 export function ReportManager() {

@@ -7,7 +7,8 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Puzzle, Search, UploadCloud, Key, Star, Download, ShieldCheck, 
-  ChevronRight, Box, Zap, ExternalLink, MessageSquare, AlertCircle, FileCode2
+  ChevronRight, Box, Zap, ExternalLink, MessageSquare, AlertCircle, FileCode2,
+  CheckCircle
 } from "lucide-react";
 
 export function PluginManager() {

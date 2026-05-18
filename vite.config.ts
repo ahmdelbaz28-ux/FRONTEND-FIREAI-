@@ -52,9 +52,11 @@ export default defineConfig({
     host: "0.0.0.0",
     allowedHosts: true,
   },
-  test: {
-    globals: true,
-    environment: "jsdom",
-    setupFiles: ["./src/test/setup.ts"],
-  },
+  ...(isTest ? {
+    test: {
+      globals: true,
+      environment: "jsdom",
+      setupFiles: ["./src/test/setup.ts"],
+    },
+  } : {}),
 });

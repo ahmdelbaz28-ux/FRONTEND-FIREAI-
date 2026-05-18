@@ -1,15 +1,21 @@
 import React from "react";
 import { toast } from "sonner";
 
+interface LogItem {
+  message: string;
+  type?: string;
+  timestamp?: number;
+}
+
 interface EventLogProps {
-  eventLogs: string[];
+  eventLogs: LogItem[];
   dataMode: string;
   connectionStatus: string;
 }
 
 export function EventLog({ eventLogs, dataMode, connectionStatus }: EventLogProps) {
   const exportJson = () => {
-    if (dataMode === 'mock') {
+    if (dataMode === 'demo' || dataMode === 'simulation') {
       toast.error("Export blocked: Simulation Mode does not generate valid engineering data.");
       return;
     }
@@ -28,7 +34,7 @@ export function EventLog({ eventLogs, dataMode, connectionStatus }: EventLogProp
     downloadAnchorNode.remove();
   };
 
-  const isBlocked = dataMode === 'mock' || connectionStatus === 'disconnected';
+  const isBlocked = dataMode === 'demo' || dataMode === 'simulation' || connectionStatus === 'disconnected';
   const buttonColorClass = isBlocked ? "text-muted-foreground cursor-not-allowed" : "text-primary hover:underline";
   const buttonClass = `text-[10px] ${buttonColorClass}`;
 
@@ -47,8 +53,8 @@ export function EventLog({ eventLogs, dataMode, connectionStatus }: EventLogProp
       </div>
       <div className="flex-1 bg-background/50 rounded-lg border border-border p-3 overflow-y-auto font-mono text-[10px] space-y-1">
         {eventLogs.map((log, index) => (
-          <div key={index} className={`${log.includes("CRITICAL") || log.includes("CASCADE") || log.includes("Alert") ? "text-destructive" : "text-foreground"}`}>
-            {log}
+          <div key={index} className={`${log.message.includes("CRITICAL") || log.message.includes("CASCADE") || log.message.includes("Alert") ? "text-destructive" : "text-foreground"}`}>
+            {log.message}
           </div>
         ))}
         {eventLogs.length === 0 && (

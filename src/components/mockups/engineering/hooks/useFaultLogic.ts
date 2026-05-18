@@ -3,7 +3,7 @@ import { useStore, actions } from "@/store/simpleStore";
 export function useFaultLogic() {
   const faults = useStore((s) => s.faults);
 
-  const isFaulty = (id: string) => faults.includes(id);
+  const isFaulty = (id: string) => faults.some(f => f.id === id);
 
   const toggleFault = (id: string) => {
     if (isFaulty(id)) {
@@ -16,8 +16,7 @@ export function useFaultLogic() {
   };
 
   const clearAllFaults = () => {
-    // Implement clear all if needed
-    faults.forEach(id => actions.removeFault(id));
+    faults.forEach(f => actions.removeFault(f.id));
     actions.addLog("All faults cleared.");
   };
 

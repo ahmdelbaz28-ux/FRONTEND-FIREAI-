@@ -9,7 +9,7 @@ import {
   FolderOpen, Cloud, DownloadCloud, PenTool, Layout, Box, Triangle,
   Settings, User, Bell, Cpu, Layers, Maximize, MinusSquare, Monitor,
   Crosshair, Focus, Mic, Send, Menu, ArrowRight, CornerDownRight, Plus, X, Lock, Eye, EyeOff,
-  ChevronUp, ChevronDown, Trash2, Download, Pin, Volume2
+  ChevronUp, ChevronDown, Trash2, Download, Pin, Volume2, AlertTriangle
 } from "lucide-react";
 
 export function MainWorkspace() {

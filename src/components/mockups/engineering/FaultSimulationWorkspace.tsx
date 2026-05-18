@@ -8,9 +8,12 @@ export function FaultSimulationWorkspace() {
   const theme = useStore((s) => s.theme);
   const helpOpen = useStore((s) => s.helpOpen);
   const eventLogs = useStore((s) => s.eventLogs);
+  const liveData = useStore((s) => s.liveData);
+  const dataMode = useStore((s) => s.dataMode);
+  const connectionStatus = useStore((s) => s.connectionStatus);
+  const faults = useStore((s) => s.faults);
   
   const { isFaulty, toggleFault } = useFaultLogic();
-  const { liveData, dataMode, connectionStatus } = useTelemetryStream();
 
   const themeClass = theme === "dark" ? "dark" : theme === "blue" ? "theme-blue" : "";
 
@@ -61,7 +64,7 @@ export function FaultSimulationWorkspace() {
                   }
                 }}
               />
-              <EventLog eventLogs={eventLogs} dataMode={dataMode} connectionStatus={connectionStatus} />
+              <EventLog eventLogs={eventLogs.map(log => ({ message: log.message, type: log.type, timestamp: log.timestamp }))} dataMode={dataMode} connectionStatus={connectionStatus} />
             </div>
           </div>
 

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { 
   Zap, Mic, Settings, X, Plus, AlertTriangle, FileText, CheckCircle2,
-  Cpu, GitPullRequest, ArrowRight, Server, Search, CheckSquare
+  Cpu, GitPullRequest, ArrowRight, Server, Search, CheckSquare, Eye, Send
 } from "lucide-react";
 
 export function AICopilot() {

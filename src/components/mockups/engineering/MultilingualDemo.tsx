@@ -5,7 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { Globe, Settings, Plus, Download, ChevronDown, CheckCircle2, ChevronUp, X } from "lucide-react";
+import { Globe, Settings, Plus, Download, ChevronDown, CheckCircle2, ChevronUp, X, ArrowRight } from "lucide-react";
 
 export function MultilingualDemo() {
   return (

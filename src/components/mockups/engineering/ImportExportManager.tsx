@@ -1,8 +1,8 @@
 import React, { useRef } from 'react';
 import { Upload, Download, FileCode, AlertCircle } from 'lucide-react';
 import { saveAs } from 'file-saver';
-// @ts-ignore - Will be installed via npm
-import * as dxfParser from 'dxf-parser';
+// @ts-ignore - dxf-parser module compatibility
+import DxfParser from 'dxf-parser';
 import { actions } from '@/store/simpleStore';
 
 export function ImportExportManager() {
@@ -23,14 +23,19 @@ export function ImportExportManager() {
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
-        const parser = new dxfParser();
-        // @ts-ignore
-        const dxfData = parser.parseSync(event.target?.result);
+        const parser = new DxfParser();
+        const result = event.target?.result;
+        if (typeof result !== 'string') {
+          throw new Error('Invalid file content');
+        }
+        const dxfData = parser.parseSync(result);
         
         // TODO: Convert DXF Entities (Lines, Circles) to Nexus Devices/Connections
         // This is a placeholder for the complex conversion logic
         console.log('DXF Parsed:', dxfData);
-        alert(`DXF Imported Successfully!\nFound ${dxfData.entities.length} entities.\n(Conversion to smart objects pending implementation)`);
+        if (dxfData && dxfData.entities) {
+          alert(`DXF Imported Successfully!\nFound ${dxfData.entities.length} entities.\n(Conversion to smart objects pending implementation)`);
+        }
         
         // Example: Trigger an action to add parsed data to store
         // actions.importEntities(convertedEntities); 

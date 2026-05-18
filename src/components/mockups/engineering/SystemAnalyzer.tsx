@@ -56,10 +56,8 @@ export function SystemAnalyzer() {
     if (issue.title.includes('Overload')) {
       // Logic: Find connected devices and suggest load shedding or upgrade simulation
       actions.addError({
-        id: `auto-fix-${Date.now()}`,
         message: `Auto-Fix Applied: Simulated cable upgrade for ${issue.relatedIds[0]}`,
         severity: 'info',
-        timestamp: Date.now(),
         relatedElementId: issue.relatedIds[0]
       });
       alert(`Applied: Upgraded virtual cable rating for connection involving ${issue.relatedIds.join(', ')}`);

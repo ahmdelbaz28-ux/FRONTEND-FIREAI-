@@ -22,8 +22,8 @@ interface HeaderProps {
   theme: string;
   dataMode: string;
   connectionStatus: string;
-  onThemeChange: (theme: string) => void;
-  onDataModeChange: (mode: "mock" | "live") => void;
+  onThemeChange: (theme: "dark" | "light" | "blue") => void;
+  onDataModeChange: (mode: "live" | "simulation" | "demo") => void;
   onHelpToggle: () => void;
 }
 
@@ -233,11 +233,11 @@ export function Header({
           {/* ── Data Mode Switcher ──────────────────────────────────────── */}
           <div className="flex bg-muted p-1 rounded-lg text-xs">
             <button
-              id="data-mode-mock"
-              onClick={() => onDataModeChange("mock")}
-              className={`px-2 py-1 rounded-md ${dataMode === "mock" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"}`}
+              id="data-mode-demo"
+              onClick={() => onDataModeChange("demo")}
+              className={`px-2 py-1 rounded-md ${dataMode === "demo" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"}`}
             >
-              <span className="text-[10px] font-bold">MOCK</span>
+              <span className="text-[10px] font-bold">DEMO</span>
             </button>
             <button
               id="data-mode-live"
