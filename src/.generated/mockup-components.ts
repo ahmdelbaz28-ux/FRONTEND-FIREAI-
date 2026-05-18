@@ -36,6 +36,7 @@ export const modules: ModuleMap = {
   "./components/mockups/engineering/SLDEditor.tsx": () => import("../components/mockups/engineering/SLDEditor.tsx"),
   "./components/mockups/engineering/SystemAnalyzer.tsx": () => import("../components/mockups/engineering/SystemAnalyzer.tsx"),
   "./components/mockups/engineering/SystemOptimizer.tsx": () => import("../components/mockups/engineering/SystemOptimizer.tsx"),
+  "./components/mockups/engineering/ThermalLegend.tsx": () => import("../components/mockups/engineering/ThermalLegend.tsx"),
   "./components/mockups/engineering/WorkspaceArabic.tsx": () => import("../components/mockups/engineering/WorkspaceArabic.tsx"),
   "./components/mockups/engineering/dashboard/ControlPanel.tsx": () => import("../components/mockups/engineering/dashboard/ControlPanel.tsx"),
   "./components/mockups/engineering/dashboard/EventLog.tsx": () => import("../components/mockups/engineering/dashboard/EventLog.tsx"),
