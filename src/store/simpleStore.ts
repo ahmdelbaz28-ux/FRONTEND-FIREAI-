@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
 // --- Types ---
-export type DeviceType = 'GENERATOR' | 'BATTERY' | 'LOAD' | 'PANEL';
+export type DeviceType = 'GENERATOR' | 'BATTERY' | 'LOAD' | 'PANEL' | 'SENSOR_MOTION' | 'SENSOR_SMOKE' | 'CAMERA' | 'SPEAKER';
 
 export interface Device {
   id: string;

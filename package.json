@@ -44,6 +44,7 @@
     "@replit/vite-plugin-runtime-error-modal": "^0.0.1",
     "@tailwindcss/vite": "^4.0.0-alpha.1",
     "@testing-library/react": "^16.3.2",
+    "@types/file-saver": "2.0.7",
     "@types/node": "^20.0.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
@@ -78,6 +79,8 @@
     "zod": "^3.22.0"
   },
   "dependencies": {
-    "@types/three": "0.184.1"
+    "@types/three": "0.184.1",
+    "dxf-parser": "1.1.2",
+    "file-saver": "2.0.5"
   }
 }

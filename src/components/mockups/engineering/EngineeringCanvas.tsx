@@ -1,13 +1,12 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useStore, actions, DeviceType } from '@/store/simpleStore';
-import { AlertTriangle, Trash2 } from 'lucide-react';
+import { AlertTriangle, Trash2, Zap, Battery, Power, Box, Wifi, Eye, Siren } from 'lucide-react';
 
 interface EngineeringCanvasProps {
-  nextType: { type: DeviceType, load: number } | null;
-  setNextType: (val: { type: DeviceType, load: number } | null) => void;
+  onItemDrop?: () => void;
 }
 
-export function EngineeringCanvas({ nextType, setNextType }: EngineeringCanvasProps) {
+export function EngineeringCanvas({ onItemDrop }: EngineeringCanvasProps) {
   const devices = useStore((s) => s.devices);
   const connections = useStore((s) => s.connections);
   const selectedId = useStore((s) => s.selectedElementId);
@@ -33,7 +32,6 @@ export function EngineeringCanvas({ nextType, setNextType }: EngineeringCanvasPr
   const handleDeviceMouseDown = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     if (e.button === 0) { // Left click
-       // If holding Shift, start connection mode
        if (e.shiftKey) {
          setConnectingFrom(id);
        } else {
@@ -67,7 +65,6 @@ export function EngineeringCanvas({ nextType, setNextType }: EngineeringCanvasPr
 
   const handleKeyDown = (e: KeyboardEvent) => {
     if ((e.key === 'Delete' || e.key === 'Backspace') && selectedId) {
-      // Check if it's a device
       if (devices.find(d => d.id === selectedId)) {
         actions.deleteDevice(selectedId);
         actions.selectElement(null);
@@ -80,39 +77,66 @@ export function EngineeringCanvas({ nextType, setNextType }: EngineeringCanvasPr
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedId]);
 
-  const handleCanvasClickWithAdd = (e: React.MouseEvent) => {
-    if (!nextType) return;
-    if (draggingId || connectingFrom) return;
+  // Handle Drop from Library
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const data = e.dataTransfer.getData('application/json');
+    if (!data) return;
     
-    const { x, y } = getCoords(e);
-    actions.addDevice({
-      type: nextType.type,
-      load: nextType.load,
-      voltage: 220,
-      x,
-      y
-    });
-    
-    setNextType(null); // Reset after add
+    try {
+      const item = JSON.parse(data);
+      if (!svgRef.current) return;
+      
+      const rect = svgRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      actions.addDevice({
+        type: item.id as DeviceType,
+        load: item.defaultLoad,
+        voltage: 220,
+        x,
+        y
+      });
+      
+      if (onItemDrop) onItemDrop(); // Notify parent to clear dragged item
+    } catch (err) {
+      console.error('Failed to parse dropped item', err);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+  };
+
+  // Helper to render icon based on type
+  const getIcon = (type: DeviceType) => {
+    const size = 24;
+    switch (type) {
+      case 'GENERATOR': return <Zap size={size} className="text-amber-400" />;
+      case 'BATTERY': return <Battery size={size} className="text-emerald-400" />;
+      case 'LOAD': return <Power size={size} className="text-blue-400" />;
+      case 'PANEL': return <Box size={size} className="text-slate-400" />;
+      case 'SENSOR_SMOKE': return <Siren size={size} className="text-red-400" />;
+      case 'SENSOR_MOTION': return <Wifi size={size} className="text-orange-400" />;
+      case 'CAMERA': return <Eye size={size} className="text-purple-400" />;
+      case 'SPEAKER': return <Box size={size} className="text-pink-400" />;;
+      default: return <Box size={size} />;
+    }
   };
 
   return (
     <div className="relative w-full h-full bg-[#0f1115] overflow-hidden cursor-crosshair">
       {/* Overlay Info */}
       <div className="absolute top-4 left-4 z-10 bg-card/90 backdrop-blur p-3 rounded border border-border shadow-lg pointer-events-none">
-        <h3 className="text-xs font-bold text-primary mb-1">NexusCAD Engine v1.0</h3>
+        <h3 className="text-xs font-bold text-primary mb-1">NexusCAD Engine v1.2</h3>
         <ul className="text-[10px] text-muted-foreground space-y-1">
-          <li>• Click Palette to select device type.</li>
-          <li>• Click Canvas to place device.</li>
+          <li>• Drag devices from library and drop here.</li>
           <li>• Drag Device to move.</li>
           <li>• Shift+Drag between devices to connect.</li>
           <li>• Select & Press Delete to remove.</li>
         </ul>
-        {nextType && (
-          <div className="mt-2 text-xs text-emerald-400 font-mono">
-            Next: {nextType.type} ({nextType.load}A)
-          </div>
-        )}
       </div>
 
       <svg
@@ -120,7 +144,8 @@ export function EngineeringCanvas({ nextType, setNextType }: EngineeringCanvasPr
         className="w-full h-full"
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        onClick={handleCanvasClickWithAdd}
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
         style={{ backgroundImage: 'radial-gradient(#1e293b 1px, transparent 1px)', backgroundSize: '20px 20px' }}
       >
         {/* Connections */}
@@ -173,10 +198,11 @@ export function EngineeringCanvas({ nextType, setNextType }: EngineeringCanvasPr
               strokeWidth={selectedId === dev.id ? 3 : 2}
               className="transition-colors hover:stroke-primary"
             />
-            <text x="30" y="25" textAnchor="middle" fill="#f8fafc" fontSize="20" fontWeight="bold">
-              {dev.type[0]}
-            </text>
-            <text x="30" y="45" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">
+            {/* Render Icon */}
+            <g transform="translate(18, 10)">
+              {getIcon(dev.type)}
+            </g>
+            <text x="30" y="50" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">
               {dev.load}A
             </text>
             {dev.load > 200 && (
