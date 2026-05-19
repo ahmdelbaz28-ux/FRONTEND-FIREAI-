@@ -61,12 +61,12 @@ export interface AppState {
   canvasElements: CanvasElement[];
   helpOpen: boolean;
   eventLogs: LogEntry[];
-  dataMode: 'live' | 'simulation' | 'demo';
+  dataMode: 'live' | 'simulation' | 'demo' | 'mock';
   liveData: Record<string, unknown>;
   connectionStatus: 'connected' | 'disconnected' | 'connecting';
   voiceActive: boolean;
   faults: Array<{ id: string; type: string; timestamp: number }>;
-  setDataMode: (mode: 'live' | 'simulation' | 'demo') => void;
+  setDataMode: (mode: 'live' | 'simulation' | 'demo' | 'mock') => void;
   toggleHelp: () => void;
   addLog: (log: Omit<LogEntry, 'id' | 'timestamp'>) => void;
   addElement: (element: Omit<CanvasElement, 'id'>) => void;
@@ -98,7 +98,7 @@ const initialState: AppState = {
   connectionStatus: 'disconnected',
   voiceActive: false,
   faults: [],
-  setDataMode: (mode: 'live' | 'simulation' | 'demo') => setState({ dataMode: mode }),
+  setDataMode: (mode: 'live' | 'simulation' | 'demo' | 'mock') => setState({ dataMode: mode }),
   toggleHelp: () => setState((s) => ({ helpOpen: !s.helpOpen })),
   addLog: (log: string | Omit<LogEntry, 'id' | 'timestamp'>) => {
     const newLog: LogEntry = typeof log === 'string'
@@ -176,7 +176,7 @@ export const actions = {
   selectElement: (id: string | null) => setState({ selectedElementId: id }),
   setSelectedElement: (id: string | null) => setState({ selectedElementId: id, selectedElement: id }),
   setActivePaletteType: (type: DeviceType | null) => setState({ activePaletteType: type }),
-  setDataMode: (mode: 'live' | 'simulation' | 'demo') => setState({ dataMode: mode }),
+  setDataMode: (mode: 'live' | 'simulation' | 'demo' | 'mock') => setState({ dataMode: mode }),
   toggleHelp: () => setState((s) => ({ helpOpen: !s.helpOpen })),
   
   addDevice: (device: Omit<Device, 'id'>) => {
