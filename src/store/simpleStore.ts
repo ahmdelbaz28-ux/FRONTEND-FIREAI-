@@ -73,7 +73,7 @@ export interface AppState {
   removeElement: (id: string) => void;
   pushError: (message: string) => void;
   setSelectedElement: (id: string | null) => void;
-  removeFault: (id: string) => void;
+  removeFault: (id: string | { id: string }) => void;
   addFault: (fault: { type: string }) => void;
   updateLiveData: (data: Record<string, unknown>) => void;
   setConnectionStatus: (status: 'connected' | 'disconnected' | 'connecting') => void;
